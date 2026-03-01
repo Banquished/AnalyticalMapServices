@@ -20,7 +20,7 @@
 
 ### Error Handling
 
-- [ ] **ERR-01**: ArcGIS REST clients (`naturvern.py`, `grunnforurensning.py`, `kulturminner.py`) raise a typed error on API-level errors instead of silently returning `[]`
+- [x] **ERR-01**: ArcGIS REST clients (`naturvern.py`, `grunnforurensning.py`, `kulturminner.py`) raise a typed error on API-level errors instead of silently returning `[]`
 - [ ] **ERR-02**: All FastAPI router endpoints (`addresses.py`, `properties.py`, `feature_info.py`) consistently catch `ApiError` and `httpx.TimeoutException`, converting them to explicit `HTTPException` responses
 - [ ] **ERR-03**: `properties.py` `search_properties` endpoint — `ost` and `nord` query params are required (no silent 0.0 default); missing params return HTTP 422
 
@@ -62,7 +62,7 @@
 |-------------|-------|--------|
 | TYPES-01 | Phase 1 | Pending |
 | TYPES-02 | Phase 1 | Pending |
-| ERR-01 | Phase 1 | Pending |
+| ERR-01 | Phase 1 | Complete |
 | ERR-02 | Phase 1 | Pending |
 | ERR-03 | Phase 1 | Pending |
 | ARCH-01 | Phase 2 | Pending |
