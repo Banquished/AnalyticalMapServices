@@ -7,8 +7,9 @@
  */
 
 import { useEffect, useRef } from "react";
+import { z } from "zod";
+import { FeatureInfoDataSchema } from "../api/schemas";
 import type {
-	FeatureInfoData,
 	FeatureInfoEntry,
 } from "../domain/featureInfoTypes";
 import { useFeatureInfoStore } from "../stores/featureInfo.store";
@@ -21,7 +22,7 @@ import type { SelectedProperty } from "../stores/propertySelection.store";
 async function fetchAllFeatureInfo(
 	lat: number,
 	lng: number,
-): Promise<FeatureInfoData> {
+): Promise<z.infer<typeof FeatureInfoDataSchema>> {
 	const url = `/api/v1/feature-info?lat=${lat}&lng=${lng}`;
 	const response = await fetch(url);
 	if (!response.ok) {
@@ -29,7 +30,8 @@ async function fetchAllFeatureInfo(
 			`Feature info request failed (${response.status}): ${response.statusText}`,
 		);
 	}
-	return response.json() as Promise<FeatureInfoData>;
+	const raw = await response.json();
+	return FeatureInfoDataSchema.parse(raw);
 }
 
 /* ------------------------------------------------------------------ */
@@ -49,11 +51,11 @@ export function useFeatureInfo(
 	const setError = useFeatureInfoStore((s) => s.setError);
 
 	const key = activeItem?.item.key ?? null;
-	const lat = activeItem?.item.property.position.lat ?? 0;
-	const lng = activeItem?.item.property.position.lng ?? 0;
+	const lat = activeItem?.item.property.position.lat ?? null;
+	const lng = activeItem?.item.property.position.lng ?? null;
 
 	useEffect(() => {
-		if (!key || lat === 0 || lng === 0) return;
+		if (!key || lat === null || lng === null) return;
 
 		// Already cached — skip
 		const existing = cache[key];

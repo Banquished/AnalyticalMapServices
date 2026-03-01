@@ -10,9 +10,14 @@
  *   3. Map click (lat/lng) → Kartverket /punkt/omrader + optional Geonorge address
  */
 
+import { z } from "zod";
+import {
+	GeokodingGeoJsonSchema,
+	GeoKodingResponsSchema,
+	OutputAdresseListSchema,
+	OutputGeoPointListSchema,
+} from "../api/schemas";
 import type {
-	GeokodingGeoJson,
-	GeoKodingRespons,
 	OutputAdresse,
 	OutputAdresseList,
 	OutputGeoPoint,
@@ -41,7 +46,7 @@ const ADDRESS_SEARCH_RESULTS = 5;
 /*  Backend fetch helpers                                               */
 /* ------------------------------------------------------------------ */
 
-async function backendGet<T>(path: string, params: Record<string, string | number | boolean | undefined>): Promise<T> {
+async function backendGet(path: string, params: Record<string, string | number | boolean | undefined>): Promise<unknown> {
 	const url = new URL(path, window.location.origin);
 	for (const [key, value] of Object.entries(params)) {
 		if (value !== undefined && value !== "") {
@@ -53,23 +58,27 @@ async function backendGet<T>(path: string, params: Record<string, string | numbe
 		const text = await response.text().catch(() => response.statusText);
 		throw new Error(`API error (${response.status}): ${text.slice(0, 200)}`);
 	}
-	return response.json() as Promise<T>;
+	return response.json();
 }
 
 async function searchAddresses(params: Record<string, string | number | boolean | undefined>): Promise<OutputAdresseList> {
-	return backendGet<OutputAdresseList>("/api/v1/addresses/search", params);
+	const raw = await backendGet("/api/v1/addresses/search", params);
+	return OutputAdresseListSchema.parse(raw);
 }
 
 async function searchAddressesByPoint(params: { lat: number; lon: number; radius: number; treffPerSide?: number }): Promise<OutputGeoPointList> {
-	return backendGet<OutputGeoPointList>("/api/v1/addresses/reverse", params);
+	const raw = await backendGet("/api/v1/addresses/reverse", params);
+	return OutputGeoPointListSchema.parse(raw);
 }
 
-async function getGeokoding(params: Record<string, string | number | boolean | undefined>): Promise<GeoKodingRespons> {
-	return backendGet<GeoKodingRespons>("/api/v1/properties/geokoding", params);
+async function getGeokoding(params: Record<string, string | number | boolean | undefined>): Promise<z.infer<typeof GeoKodingResponsSchema>> {
+	const raw = await backendGet("/api/v1/properties/geokoding", params);
+	return GeoKodingResponsSchema.parse(raw);
 }
 
-async function getPropertyAreasByPoint(params: { ost: number; nord: number; koordsys?: number; radius?: number; utkoordsys?: number }): Promise<GeoKodingRespons> {
-	return backendGet<GeoKodingRespons>("/api/v1/properties/areas", params);
+async function getPropertyAreasByPoint(params: { ost: number; nord: number; koordsys?: number; radius?: number; utkoordsys?: number }): Promise<z.infer<typeof GeoKodingResponsSchema>> {
+	const raw = await backendGet("/api/v1/properties/areas", params);
+	return GeoKodingResponsSchema.parse(raw);
 }
 
 /* ------------------------------------------------------------------ */
@@ -99,7 +108,7 @@ function mapGeonorgeAddress(a: OutputAdresse | OutputGeoPoint): Address {
 	};
 }
 
-function mapKartverketFeature(feature: GeokodingGeoJson): Property {
+function mapKartverketFeature(feature: z.infer<typeof GeokodingGeoJsonSchema>): Property {
 	const p = feature.properties;
 	const geom = feature.geometry;
 
