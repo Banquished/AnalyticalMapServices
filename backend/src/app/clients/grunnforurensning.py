@@ -5,7 +5,11 @@ API: https://kart.miljodirektoratet.no/arcgis/rest/services/grunnforurensning2/M
 Layer 1 = forurenset_omrade (contaminated area polygons)
 """
 
+import logging
+
 from app.clients.http import ApiError, fetch_json
+
+logger = logging.getLogger(__name__)
 
 _BASE_URL = (
     "https://kart.miljodirektoratet.no/arcgis/rest/services/grunnforurensning2/MapServer"
@@ -47,4 +51,8 @@ async def query_grunnforurensning(lat: float, lng: float) -> list[dict]:
             f"ArcGIS error from {_BASE_URL}: {err}",
             status=err.get("code") if isinstance(err, dict) else None,
         )
-    return [f["attributes"] for f in data.get("features", [])]
+    features = data.get("features", [])
+    if not isinstance(features, list):
+        logger.warning("Unexpected ArcGIS response format")
+        return []
+    return [f["attributes"] for f in features if isinstance(f, dict) and "attributes" in f]

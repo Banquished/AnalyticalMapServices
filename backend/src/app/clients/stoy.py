@@ -9,7 +9,7 @@ Layer 5 = stoy_veg_storby_dogn (daytime road noise in urban areas)
 
 import logging
 
-from app.clients.http import fetch_json
+from app.clients.http import ApiError, fetch_json
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,14 @@ async def query_stoy_veg(lat: float, lng: float) -> list[dict]:
     if data is None:
         return []
     if "error" in data:
-        logger.warning("Støy veg API error: %s", data["error"])
+        err = data["error"]
+        raise ApiError(
+            "arcgis",
+            str(err.get("message", "unknown")) if isinstance(err, dict) else str(err),
+            _BASE_URL,
+        )
+    features = data.get("features", [])
+    if not isinstance(features, list):
+        logger.warning("Unexpected ArcGIS response format")
         return []
-    return [f["attributes"] for f in data.get("features", [])]
+    return [f["attributes"] for f in features if isinstance(f, dict) and "attributes" in f]

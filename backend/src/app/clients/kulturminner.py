@@ -5,7 +5,11 @@ NOTE: Riksantikvaren has announced changes to this API from 15.04.2026.
 The MapServer URL or layer IDs may change — keep this file isolated for easy update.
 """
 
+import logging
+
 from app.clients.http import ApiError, fetch_json
+
+logger = logging.getLogger(__name__)
 
 _BASE_URL = (
     "https://kart.ra.no/arcgis/rest/services/Distribusjon/Kulturminner20180301/MapServer"
@@ -48,10 +52,14 @@ async def query_kulturminner(lat: float, lng: float) -> list[dict]:
     if data is None:
         return []
     if "error" in data:
-        err = data.get("error", {})
+        err = data["error"]
         raise ApiError(
-            "arcgis_error",
-            f"ArcGIS error from {_BASE_URL}: {err}",
-            status=err.get("code") if isinstance(err, dict) else None,
+            "arcgis",
+            str(err.get("message", "unknown")) if isinstance(err, dict) else str(err),
+            _BASE_URL,
         )
-    return [f["attributes"] for f in data.get("features", [])]
+    features = data.get("features", [])
+    if not isinstance(features, list):
+        logger.warning("Unexpected ArcGIS response format")
+        return []
+    return [f["attributes"] for f in features if isinstance(f, dict) and "attributes" in f]
