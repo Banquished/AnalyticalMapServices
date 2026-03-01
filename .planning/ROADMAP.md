@@ -11,7 +11,7 @@
 
 **Milestone goal:** Clean architecture, correct types, explicit error handling, and a working Docker Compose stack — ready for Sweco to run and port.
 
-- [ ] **Phase 1: Backend Correctness** - Eliminate type suppressions and silent errors in the Python backend
+- [x] **Phase 1: Backend Correctness** - Eliminate type suppressions and silent errors in the Python backend
 - [ ] **Phase 2: Frontend Architecture Split** - Break oversized components along layer boundaries
 - [ ] **Phase 3: Frontend Polish & Zod Validation** - DRY helpers, explicit return types, runtime API validation
 - [ ] **Phase 4: Docker & Deployment Readiness** - Containerize, document env vars, audit config
@@ -30,9 +30,9 @@
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Fix _fetch_with_retry @overload (TYPES-01) and _safe[T] generic (TYPES-02); add [tool.mypy] to pyproject.toml
-- [ ] 01-02-PLAN.md — Raise ApiError on ArcGIS API errors in naturvern, grunnforurensning, kulturminner clients (ERR-01)
-- [ ] 01-03-PLAN.md — Add consistent try/except wrappers to all router endpoints; fix 0.0 coordinate default in search_properties (ERR-02, ERR-03)
+- [x] 01-01-PLAN.md — Fix _fetch_with_retry @overload (TYPES-01) and _safe[T] generic (TYPES-02); add [tool.mypy] to pyproject.toml
+- [x] 01-02-PLAN.md — Raise ApiError on ArcGIS API errors in naturvern, grunnforurensning, kulturminner clients (ERR-01)
+- [x] 01-03-PLAN.md — Add consistent try/except wrappers to all router endpoints; fix 0.0 coordinate default in search_properties (ERR-02, ERR-03)
 
 ### Phase 2: Frontend Architecture Split
 **Goal**: `MapSearchControl.tsx` and `MapPageView.tsx` each respect the 6-layer feature architecture — HTTP logic is in `api/`, state logic is in `hooks/`, rendering is in `ui/`.
@@ -73,7 +73,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Backend Correctness | 2/3 | In Progress|  |
+| 1. Backend Correctness | 3/3 | Complete | 2026-03-01 |
 | 2. Frontend Architecture Split | 0/TBD | Not started | - |
 | 3. Frontend Polish & Zod Validation | 0/TBD | Not started | - |
 | 4. Docker & Deployment Readiness | 0/TBD | Not started | - |

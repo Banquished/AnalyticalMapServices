@@ -19,15 +19,15 @@ Progress: [███░░░░░░░] 30%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 3
 - Average duration: ~2 min
-- Total execution time: ~4 min
+- Total execution time: ~6 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-backend-correctness | 2 | ~4 min | ~2 min |
+| 01-backend-correctness | 3/3 | ~6 min | ~2 min |
 
 *Updated after each plan completion*
 
@@ -40,6 +40,8 @@ Progress: [███░░░░░░░] 30%
 - All checks currently pass: `tsc --noEmit` clean, `npm run build` clean, `ruff check` clean
 - [01-02] ArcGIS clients raise ApiError on API errors — data is None (network) still returns [], "error" in data raises typed exception
 - [01-02] Removed unused logging imports from ArcGIS clients after removing logger.warning calls
+- [01-03] Re-raise HTTPException before ApiError/TimeoutException catch to preserve 422 vs 502 semantics
+- [01-03] ERR-02 and ERR-03 complete — all router endpoints wrapped; silent 0.0 coordinate default removed
 
 ### Pending Todos
 
@@ -52,5 +54,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 01-02-PLAN.md (ArcGIS client error handling)
+Stopped at: Completed 01-03-PLAN.md (router error wrappers + coordinate guard) — Phase 1 complete
 Resume file: None

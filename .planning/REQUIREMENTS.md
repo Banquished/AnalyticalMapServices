@@ -8,8 +8,8 @@
 
 ### Type Safety
 
-- [ ] **TYPES-01**: Backend `http.py` — `_fetch_with_retry` refactored with `@overload` so callers no longer need `# type: ignore` suppressions
-- [ ] **TYPES-02**: Backend `feature_info.py` — `_safe[T]` generic properly binds return type; `_rest()` type mismatch resolved without suppression
+- [x] **TYPES-01**: Backend `http.py` — `_fetch_with_retry` refactored with `@overload` so callers no longer need `# type: ignore` suppressions
+- [x] **TYPES-02**: Backend `feature_info.py` — `_safe[T]` generic properly binds return type; `_rest()` type mismatch resolved without suppression
 - [ ] **TYPES-03**: Frontend — Zod schemas created and applied at all 3 API boundaries (`/api/v1/feature-info`, property search, address search); raw `as SomeType` casts removed
 
 ### Architecture
@@ -21,8 +21,8 @@
 ### Error Handling
 
 - [x] **ERR-01**: ArcGIS REST clients (`naturvern.py`, `grunnforurensning.py`, `kulturminner.py`) raise a typed error on API-level errors instead of silently returning `[]`
-- [ ] **ERR-02**: All FastAPI router endpoints (`addresses.py`, `properties.py`, `feature_info.py`) consistently catch `ApiError` and `httpx.TimeoutException`, converting them to explicit `HTTPException` responses
-- [ ] **ERR-03**: `properties.py` `search_properties` endpoint — `ost` and `nord` query params are required (no silent 0.0 default); missing params return HTTP 422
+- [x] **ERR-02**: All FastAPI router endpoints (`addresses.py`, `properties.py`, `feature_info.py`) consistently catch `ApiError` and `httpx.TimeoutException`, converting them to explicit `HTTPException` responses
+- [x] **ERR-03**: `properties.py` `search_properties` endpoint — `ost` and `nord` query params are required (no silent 0.0 default); missing params return HTTP 422
 
 ### DRY
 
@@ -60,11 +60,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TYPES-01 | Phase 1 | Pending |
-| TYPES-02 | Phase 1 | Pending |
+| TYPES-01 | Phase 1 | Complete |
+| TYPES-02 | Phase 1 | Complete |
 | ERR-01 | Phase 1 | Complete |
-| ERR-02 | Phase 1 | Pending |
-| ERR-03 | Phase 1 | Pending |
+| ERR-02 | Phase 1 | Complete |
+| ERR-03 | Phase 1 | Complete |
 | ARCH-01 | Phase 2 | Pending |
 | ARCH-02 | Phase 2 | Pending |
 | ARCH-03 | Phase 3 | Pending |
