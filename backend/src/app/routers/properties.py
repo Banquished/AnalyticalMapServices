@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Query
+import httpx
+from fastapi import APIRouter, HTTPException, Query
 
+from app.clients.http import ApiError
 from app.services.property import geokoding, properties_by_point, property_areas_by_point
 
 router = APIRouter(tags=["properties"])
@@ -23,25 +25,35 @@ async def search_properties(
     seksjonsnummer: int | None = Query(None),
 ) -> dict:
     """Find properties near a point (by lat/lng) or by matrikkel number."""
-    if matrikkelnummer or kommunenummer or gardsnummer:
-        return await geokoding(
-            matrikkelnummer=matrikkelnummer,
-            kommunenummer=kommunenummer,
-            gardsnummer=gardsnummer,
-            bruksnummer=bruksnummer,
-            festenummer=festenummer,
-            seksjonsnummer=seksjonsnummer,
+    try:
+        if matrikkelnummer or kommunenummer or gardsnummer:
+            return await geokoding(
+                matrikkelnummer=matrikkelnummer,
+                kommunenummer=kommunenummer,
+                gardsnummer=gardsnummer,
+                bruksnummer=bruksnummer,
+                festenummer=festenummer,
+                seksjonsnummer=seksjonsnummer,
+                utkoordsys=utkoordsys,
+            )
+        if ost is None or nord is None:
+            raise HTTPException(
+                status_code=422,
+                detail="ost and nord are required for point-based property search",
+            )
+        return await properties_by_point(
+            ost=ost,
+            nord=nord,
+            koordsys=koordsys,
+            radius=radius,
+            treff_per_side=treff_per_side,
+            side=side,
             utkoordsys=utkoordsys,
         )
-    return await properties_by_point(
-        ost=ost or 0,
-        nord=nord or 0,
-        koordsys=koordsys,
-        radius=radius,
-        treff_per_side=treff_per_side,
-        side=side,
-        utkoordsys=utkoordsys,
-    )
+    except HTTPException:
+        raise  # re-raise 422 guard — don't convert to 502
+    except (ApiError, httpx.TimeoutException) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.get("/properties/areas")
@@ -54,14 +66,17 @@ async def get_property_areas(
     utkoordsys: int | None = Query(None),
 ) -> dict:
     """Fetch GeoJSON property area polygons near a point."""
-    return await property_areas_by_point(
-        ost=ost,
-        nord=nord,
-        koordsys=koordsys,
-        radius=radius,
-        maks_treff=maks_treff,
-        utkoordsys=utkoordsys,
-    )
+    try:
+        return await property_areas_by_point(
+            ost=ost,
+            nord=nord,
+            koordsys=koordsys,
+            radius=radius,
+            maks_treff=maks_treff,
+            utkoordsys=utkoordsys,
+        )
+    except (ApiError, httpx.TimeoutException) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.get("/properties/geokoding")
@@ -76,13 +91,16 @@ async def get_geokoding_endpoint(
     utkoordsys: int | None = Query(None),
 ) -> dict:
     """Kartverket /geokoding — find property by matrikkel, optionally with area polygon."""
-    return await geokoding(
-        matrikkelnummer=matrikkelnummer,
-        kommunenummer=kommunenummer,
-        gardsnummer=gardsnummer,
-        bruksnummer=bruksnummer,
-        festenummer=festenummer,
-        seksjonsnummer=seksjonsnummer,
-        omrade=omrade,
-        utkoordsys=utkoordsys,
-    )
+    try:
+        return await geokoding(
+            matrikkelnummer=matrikkelnummer,
+            kommunenummer=kommunenummer,
+            gardsnummer=gardsnummer,
+            bruksnummer=bruksnummer,
+            festenummer=festenummer,
+            seksjonsnummer=seksjonsnummer,
+            omrade=omrade,
+            utkoordsys=utkoordsys,
+        )
+    except (ApiError, httpx.TimeoutException) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
