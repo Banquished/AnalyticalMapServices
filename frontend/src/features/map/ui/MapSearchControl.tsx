@@ -3,45 +3,12 @@ import L, { type ControlPosition } from "leaflet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useMap } from "react-leaflet";
-import type { GeoKodingRespons, OutputAdresse, OutputAdresseList } from "../api/types";
-
-async function searchAddresses(
-	params: Record<string, string | number | boolean | undefined>,
-): Promise<OutputAdresseList> {
-	const url = new URL("/api/v1/addresses/search", window.location.origin);
-	for (const [k, v] of Object.entries(params)) {
-		if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
-	}
-	const res = await fetch(url.toString());
-	if (!res.ok) throw new Error(`Address search failed (${res.status})`);
-	return res.json() as Promise<OutputAdresseList>;
-}
-
-async function getGeokoding(
-	params: Record<string, string | number | boolean | undefined>,
-): Promise<GeoKodingRespons> {
-	const url = new URL("/api/v1/properties/geokoding", window.location.origin);
-	for (const [k, v] of Object.entries(params)) {
-		if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
-	}
-	const res = await fetch(url.toString());
-	if (!res.ok) throw new Error(`Geokoding failed (${res.status})`);
-	return res.json() as Promise<GeoKodingRespons>;
-}
-import { parsePartialMatrikkel } from "../domain/matrikkelParser";
+import type { OutputAdresse } from "../api/types";
+import { useAddressTypeahead } from "../hooks/useAddressTypeahead";
+import { useMatrikkelSearch } from "../hooks/useMatrikkelSearch";
 import type { SearchQuery } from "../domain/types";
 
 /* Note: Search control CSS has been extracted to map.css */
-
-/** Debounce delay for typeahead in ms */
-const DEBOUNCE_MS = 300;
-
-/** Results per page for typeahead suggestion queries */
-const RESULTS_PER_PAGE = 50;
-
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
 
 type SearchMode = "address" | "matrikkel";
 
@@ -68,11 +35,21 @@ export function MapSearchControl({
 	const [addressText, setAddressText] = useState("");
 	const [matrikkelText, setMatrikkelText] = useState("");
 
-	/* ---- Typeahead state ---- */
-	const [suggestions, setSuggestions] = useState<OutputAdresse[]>([]);
-	const [showSuggestions, setShowSuggestions] = useState(false);
+	/* ---- Typeahead hooks ---- */
+	const addrHook = useAddressTypeahead(addressText, mode === "address");
+	const matHook = useMatrikkelSearch(matrikkelText, mode === "matrikkel");
+
+	/* Active hook state (derived from current mode) */
+	const suggestions = mode === "address" ? addrHook.suggestions : matHook.suggestions;
+	const showSuggestions = mode === "address" ? addrHook.showSuggestions : matHook.showSuggestions;
+	const setShowSuggestions =
+		mode === "address" ? addrHook.setShowSuggestions : matHook.setShowSuggestions;
+
+	/* Reset active index when suggestions list changes */
 	const [activeIndex, setActiveIndex] = useState(-1);
-	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	useEffect(() => {
+		setActiveIndex(-1);
+	}, [suggestions]);
 
 	const helpId = "map-search-help";
 
@@ -106,168 +83,14 @@ export function MapSearchControl({
 		};
 	}, [map, control]);
 
-	/* ---- Debounced typeahead for address mode ---- */
-	useEffect(() => {
-		if (mode !== "address" || addressText.trim().length < 2) {
-			setSuggestions([]);
-			setShowSuggestions(false);
-			return;
-		}
-
-		if (debounceRef.current) clearTimeout(debounceRef.current);
-		debounceRef.current = setTimeout(async () => {
-			try {
-				const res = await searchAddresses({
-					sok: addressText.trim(),
-					fuzzy: true,
-					treffPerSide: RESULTS_PER_PAGE,
-				});
-				setSuggestions(res.adresser);
-				setShowSuggestions(res.adresser.length > 0);
-				setActiveIndex(-1);
-			} catch {
-				setSuggestions([]);
-				setShowSuggestions(false);
-			}
-		}, DEBOUNCE_MS);
-
-		return () => {
-			if (debounceRef.current) clearTimeout(debounceRef.current);
-		};
-	}, [addressText, mode]);
-
-	/* ---- Debounced typeahead for matrikkel mode ---- */
-	useEffect(() => {
-		if (mode !== "matrikkel" || matrikkelText.trim().length < 2) {
-			if (mode === "matrikkel") {
-				setSuggestions([]);
-				setShowSuggestions(false);
-			}
-			return;
-		}
-
-		if (debounceRef.current) clearTimeout(debounceRef.current);
-		debounceRef.current = setTimeout(async () => {
-			try {
-				const parsed = parsePartialMatrikkel(matrikkelText.trim());
-
-				let unique: OutputAdresse[] = [];
-
-				if (parsed.gnr !== undefined) {
-					const res = await searchAddresses({
-						treffPerSide: RESULTS_PER_PAGE,
-						gardsnummer: parsed.gnr,
-						bruksnummer: parsed.bnr,
-						...(/^\d{4}$/.test(parsed.kommune)
-							? { kommunenummer: parsed.kommune }
-							: parsed.kommune
-								? { kommunenavn: parsed.kommune }
-								: {}),
-					});
-
-					const seen = new Set<string>();
-					unique = res.adresser.filter((a) => {
-						const key = `${a.kommunenummer}-${a.gardsnummer}/${a.bruksnummer}`;
-						if (seen.has(key)) return false;
-						seen.add(key);
-						return true;
-					});
-
-					/* Kartverket fallback: property exists but has no registered address */
-					if (
-						unique.length === 0 &&
-						parsed.bnr !== undefined &&
-						parsed.kommune
-					) {
-						let knr: string;
-						let kNavn: string;
-
-						if (/^\d{4}$/.test(parsed.kommune)) {
-							knr = parsed.kommune;
-							kNavn = parsed.kommune;
-						} else {
-							const fallback = await searchAddresses({
-								kommunenavn: parsed.kommune,
-								treffPerSide: 1,
-							});
-							if (fallback.adresser.length > 0) {
-								knr = fallback.adresser[0].kommunenummer;
-								kNavn = fallback.adresser[0].kommunenavn;
-							} else {
-								setSuggestions([]);
-								setShowSuggestions(false);
-								return;
-							}
-						}
-
-						const geo = await getGeokoding({
-							kommunenummer: knr,
-							gardsnummer: parsed.gnr,
-							bruksnummer: parsed.bnr,
-							utkoordsys: 4258,
-						});
-
-						if (geo.features.length > 0) {
-							const f = geo.features[0];
-							unique = [
-								{
-									adressenavn: "",
-									adressetekst:
-										f.properties.matrikkelnummertekst ?? "(ingen adresse)",
-									adressekode: 0,
-									nummer: 0,
-									kommunenummer: f.properties.kommunenummer,
-									kommunenavn: kNavn,
-									gardsnummer: f.properties.gardsnummer,
-									bruksnummer: f.properties.bruksnummer,
-									objtype: "Matrikkeladresse",
-									poststed: "",
-									postnummer: "",
-									adressetekstutenadressetilleggsnavn: "",
-									stedfestingverifisert: false,
-									representasjonspunkt: { epsg: "4258", lat: 0, lon: 0 },
-									oppdateringsdato: f.properties.oppdateringsdato ?? "",
-								} as OutputAdresse,
-							];
-						}
-					}
-				} else {
-					const res = await searchAddresses({
-						sok: parsed.kommune,
-						fuzzy: true,
-						treffPerSide: RESULTS_PER_PAGE,
-					});
-
-					const seen = new Set<string>();
-					unique = res.adresser.filter((a) => {
-						const key = `${a.kommunenummer}-${a.gardsnummer}/${a.bruksnummer}`;
-						if (seen.has(key)) return false;
-						seen.add(key);
-						return true;
-					});
-				}
-
-				setSuggestions(unique);
-				setShowSuggestions(unique.length > 0);
-				setActiveIndex(-1);
-			} catch {
-				setSuggestions([]);
-				setShowSuggestions(false);
-			}
-		}, DEBOUNCE_MS);
-
-		return () => {
-			if (debounceRef.current) clearTimeout(debounceRef.current);
-		};
-	}, [matrikkelText, mode]);
-
 	const selectSuggestion = useCallback(
 		(addr: OutputAdresse) => {
 			setAddressText(addr.adressetekst);
-			setSuggestions([]);
-			setShowSuggestions(false);
+			addrHook.setShowSuggestions(false);
 			onSearch({ type: "address", text: addr.adressetekst });
 		},
+		// addrHook.setShowSuggestions is a stable setState function
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[onSearch],
 	);
 
@@ -275,10 +98,11 @@ export function MapSearchControl({
 		(addr: OutputAdresse) => {
 			const text = `${addr.kommunenavn} ${addr.gardsnummer}/${addr.bruksnummer}`;
 			setMatrikkelText(text);
-			setSuggestions([]);
-			setShowSuggestions(false);
+			matHook.setShowSuggestions(false);
 			onSearch({ type: "matrikkel", text });
 		},
+		// matHook.setShowSuggestions is a stable setState function
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[onSearch],
 	);
 
@@ -294,14 +118,12 @@ export function MapSearchControl({
 				if (q) onSearch({ type: "matrikkel", text: q });
 			}
 		},
-		[mode, addressText, matrikkelText, onSearch],
+		[mode, addressText, matrikkelText, onSearch, setShowSuggestions],
 	);
 
 	const clear = useCallback(() => {
 		setAddressText("");
 		setMatrikkelText("");
-		setSuggestions([]);
-		setShowSuggestions(false);
 		onClear?.();
 	}, [onClear]);
 

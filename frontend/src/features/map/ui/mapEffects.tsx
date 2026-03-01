@@ -95,8 +95,10 @@ export function AdjustTopRightControls({
 		if (topRight) {
 			topRight.style.transition = "right 0.25s ease-in-out";
 			topRight.style.right = open ? `${width}px` : "0px";
-			/* Clear the toggle button (top-3 = 12px + 34px height + 8px gap) */
-			topRight.style.top = "54px";
+			/* Clear the toggle button: top-3 (12px) + h-8 (32px) = 44px bottom edge.
+			 * Leaflet adds 10px margin-top to the first control, so container_top
+			 * needs to be 44 - 10 + desired_gap = 42px for a ~8px visual gap. */
+			topRight.style.top = "42px";
 		}
 	}, [map, open, width]);
 	return null;

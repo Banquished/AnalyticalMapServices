@@ -1,5 +1,16 @@
-import { AlertCircle, FileText, Home, Info, Map } from "lucide-react";
+import { AlertCircle, ClipboardList, FileText, Home, Info, Map } from "lucide-react";
 import type { GenereltData } from "../domain/featureInfoTypes";
+
+function renderDetailValue(value: string): React.ReactNode {
+	if (/^https?:\/\//.test(value)) {
+		return (
+			<a href={value} target="_blank" rel="noopener noreferrer" className="fi-tab__link">
+				Åpne ↗
+			</a>
+		);
+	}
+	return value;
+}
 
 /* ------------------------------------------------------------------ */
 /*  GenereltTab — general property information from Matrikkelkart       */
@@ -50,7 +61,7 @@ export function GenereltTab({ data }: Props) {
 								{entries.map(([key, value]) => (
 									<tr key={key}>
 										<td className="fi-tab__detail-key">{key}</td>
-										<td className="fi-tab__detail-value">{value}</td>
+										<td className="fi-tab__detail-value">{renderDetailValue(value)}</td>
 									</tr>
 								))}
 							</tbody>
@@ -90,7 +101,7 @@ export function GenereltTab({ data }: Props) {
 							.map(([k, v]) => (
 								<tr key={k}>
 									<td className="fi-tab__detail-key">{k}</td>
-									<td className="fi-tab__detail-value">{v}</td>
+									<td className="fi-tab__detail-value">{renderDetailValue(v)}</td>
 								</tr>
 							))}
 					</tbody>
@@ -131,7 +142,7 @@ export function GenereltTab({ data }: Props) {
 							.map(([k, v]) => (
 								<tr key={k}>
 									<td className="fi-tab__detail-key">{k}</td>
-									<td className="fi-tab__detail-value">{v}</td>
+									<td className="fi-tab__detail-value">{renderDetailValue(v)}</td>
 								</tr>
 							))}
 					</tbody>
@@ -140,6 +151,55 @@ export function GenereltTab({ data }: Props) {
 				<div className="fi-tab__no-data">
 					<Info size={14} />
 					<span>Ingen kommunedelplaner funnet for denne eiendommen.</span>
+				</div>
+			)}
+
+			{/* ── Planlegging igangsatt ── */}
+			<h3 className="fi-tab__section-title">
+				<ClipboardList size={14} />
+				<span>Planlegging igangsatt (DiBK)</span>
+			</h3>
+			{data.planleggingIgangsatt ? (
+				<table className="fi-tab__details-table">
+					<tbody>
+						{data.planleggingIgangsatt.plannavn && (
+							<tr>
+								<td className="fi-tab__detail-key">Plannavn</td>
+								<td className="fi-tab__detail-value">
+									{data.planleggingIgangsatt.plannavn}
+								</td>
+							</tr>
+						)}
+						{data.planleggingIgangsatt.plantype && (
+							<tr>
+								<td className="fi-tab__detail-key">Plantype</td>
+								<td className="fi-tab__detail-value">
+									{data.planleggingIgangsatt.plantype}
+								</td>
+							</tr>
+						)}
+						{data.planleggingIgangsatt.igangsettingsdato && (
+							<tr>
+								<td className="fi-tab__detail-key">Igangsettingsdato</td>
+								<td className="fi-tab__detail-value">
+									{data.planleggingIgangsatt.igangsettingsdato}
+								</td>
+							</tr>
+						)}
+						{Object.entries(data.planleggingIgangsatt.details)
+							.filter(([k]) => k !== "Plannavn" && k !== "Plantype" && k !== "Igangsettingsdato")
+							.map(([k, v]) => (
+								<tr key={k}>
+									<td className="fi-tab__detail-key">{k}</td>
+									<td className="fi-tab__detail-value">{renderDetailValue(v)}</td>
+								</tr>
+							))}
+					</tbody>
+				</table>
+			) : (
+				<div className="fi-tab__no-data">
+					<Info size={14} />
+					<span>Ingen planlegging igangsatt funnet for denne eiendommen.</span>
 				</div>
 			)}
 		</div>

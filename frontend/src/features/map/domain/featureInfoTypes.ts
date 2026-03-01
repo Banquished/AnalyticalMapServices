@@ -260,6 +260,18 @@ export type KommuneplanData = {
 	details: Record<string, string>;
 };
 
+/** DiBK Planlegging igangsatt — active planning areas (initiated but not yet adopted) */
+export type PlanleggingIgangsattData = {
+	/** Plan name */
+	plannavn: string | null;
+	/** Plan type (e.g. "Reguleringsplan", "Kommuneplan") */
+	plantype: string | null;
+	/** Date planning was formally initiated */
+	igangsettingsdato: string | null;
+	/** Remaining key-value details */
+	details: Record<string, string>;
+};
+
 export type GenereltData = {
 	/** Matrikkel information from Kartverket */
 	matrikkelInfo: string;
@@ -271,6 +283,8 @@ export type GenereltData = {
 	kommuneplan: KommuneplanData | null;
 	/** DIBK Kommunedelplan arealformål — same structure as kommuneplan */
 	kommunedelplan: KommuneplanData | null;
+	/** DiBK Planlegging igangsatt — active planning area, if any */
+	planleggingIgangsatt: PlanleggingIgangsattData | null;
 };
 
 /* ------------------------------------------------------------------ */

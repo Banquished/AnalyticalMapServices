@@ -12,6 +12,7 @@ import {
     WMSTileLayer,
     ZoomControl,
 } from "react-leaflet";
+import { baseLayerOptions } from "../config/baseLayers";
 import { wmsLayersOptions } from "../config/wmsLayers";
 import type { MapClickEvent, SearchQuery } from "../domain/types";
 import type { SelectedProperty } from "../stores/propertySelection.store";
@@ -110,15 +111,23 @@ export function MapView({
 		>
 			{/* Zoom control in bottom-left so search bar sits above */}
 			<ZoomControl position="bottomleft" />
-			{/* Base layer — OpenStreetMap */}
-			<TileLayer
-				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-				url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-				maxZoom={20}
-			/>
-
-			{/* WMS overlays + property polygon layer control */}
+			{/* WMS overlays + base layer control */}
 			<LayersControl position="topright">
+				{/* Base layers — radio switcher */}
+				{baseLayerOptions.map((layer) => (
+					<LayersControl.BaseLayer
+						key={layer.name}
+						name={layer.name}
+						checked={layer.checked ?? false}
+					>
+						<TileLayer
+							url={layer.url}
+							attribution={layer.attribution}
+							maxZoom={layer.maxZoom ?? 20}
+						/>
+					</LayersControl.BaseLayer>
+				))}
+
 				{/* "Farget eiendom" at top of the list (most important, always on) */}
 				<LayersControl.Overlay key="fargekart" name="Farget eiendom" checked>
 					<LayerGroup>

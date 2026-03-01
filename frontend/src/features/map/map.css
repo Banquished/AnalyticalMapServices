@@ -1532,6 +1532,13 @@ svg.leaflet-zoom-animated path {
 [data-theme="dark"] .fi-tab__detail-value {
 	color: var(--color-text);
 }
+.fi-tab__link {
+	color: var(--color-map-green-dark);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+.fi-tab__link:hover { opacity: 0.8; }
+[data-theme="dark"] .fi-tab__link { color: var(--color-map-green); }
 .fi-tab__raw-text {
 	font-size: 0.75rem;
 	background: #f9fafb;

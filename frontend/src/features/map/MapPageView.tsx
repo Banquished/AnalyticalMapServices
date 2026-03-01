@@ -1,45 +1,21 @@
 import { useToastStore } from "@/shared/ui/toast";
-import {
-	AlertCircle,
-	ChevronLeft,
-	ChevronRight,
-	Trash2,
-	X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useShallow } from "zustand/react/shallow";
 import type { Property, SearchQuery } from "./domain/types";
 import { useBatchFeatureInfo, useFeatureInfo } from "./hooks/useFeatureInfo";
 import { useMapInteraction } from "./hooks/useMapInteraction";
 import { usePropertySearch } from "./hooks/usePropertySearch";
+import { usePropertySelection } from "./hooks/usePropertySelection";
+import { usePropertySelectionToasts } from "./hooks/usePropertySelectionToasts";
+import { useTabStatuses, type DotStatus } from "./hooks/useTabStatuses";
 import "./map.css";
-import { usePropertySelectionStore } from "./stores/propertySelection.store";
-import { ActivePropertyHeader } from "./ui/ActivePropertyHeader";
-import { GenereltTab } from "./ui/GenereltTab";
-import { KlimaTab } from "./ui/KlimaTab";
+import { FeatureInfoTabs } from "./ui/FeatureInfoTabs";
 import { computeBounds } from "./ui/mapUtils";
 import type { MapClickEvent } from "./ui/MapView";
 import { MapView } from "./ui/MapView";
-import { MiljoTab } from "./ui/MiljoTab";
 import { PropertyPickerPopover } from "./ui/PropertyPickerPopover";
-import { PropertyTable } from "./ui/PropertyTable";
-import { RisikoTab } from "./ui/RisikoTab";
 import { SidePanel, type SidePanelTab } from "./ui/SidePanel";
-import { TabEmptyState } from "./ui/TabEmptyState";
-
-type DotStatus = "pass" | "warn" | "fail" | "loading" | "none";
-function StatusDot({ s }: { s: DotStatus }) {
-	if (s === "none") return null;
-	const cls = {
-		pass: "bg-success",
-		warn: "bg-warning",
-		fail: "bg-danger",
-		loading: "bg-text-muted animate-pulse",
-	}[s];
-	return (
-		<span className={`inline-block h-1.5 w-1.5 rounded-full ${cls} shrink-0`} />
-	);
-}
+import { StatusDot } from "./ui/StatusDot";
 
 export const MapPageView = () => {
 	const search = usePropertySearch();
@@ -64,26 +40,7 @@ export const MapPageView = () => {
 		setScreenshot,
 		screenshotBase64,
 		clearScreenshot,
-	} = usePropertySelectionStore(
-		useShallow((s) => ({
-			selected: s.selected,
-			addResult: s.addResult,
-			removeByKey: s.removeByKey,
-			moveUp: s.moveUp,
-			moveDown: s.moveDown,
-			clearAll: s.clearAll,
-			activeKey: s.activeKey,
-			setActiveKey: s.setActiveKey,
-			panelOpen: s.panelOpen,
-			togglePanel: s.togglePanel,
-			panelWidth: s.panelWidth,
-			setPanelWidth: s.setPanelWidth,
-			setPanelResizing: s.setPanelResizing,
-			setScreenshot: s.setScreenshot,
-			screenshotBase64: s.screenshotBase64,
-			clearScreenshot: s.clearScreenshot,
-		})),
-	);
+	} = usePropertySelection();
 
 	const [highlightedKey, setHighlightedKey] = useState<string | null>(null);
 
@@ -102,65 +59,31 @@ export const MapPageView = () => {
 	useBatchFeatureInfo(selected);
 
 	/* ---- Traffic-light status per tab ---- */
-	const tabStatuses = useMemo((): Record<string, DotStatus> => {
-		if (!featureInfo || featureInfo.status === "loading")
-			return { klima: "loading", risiko: "loading", miljo: "loading" };
-		if (featureInfo.status === "error" || featureInfo.status !== "loaded")
-			return {};
-		const d = featureInfo.data;
-		const klimaFail =
-			d.klima &&
-			(d.klima.flom50?.inZone ||
-				d.klima.flom100?.inZone ||
-				d.klima.flom200?.inZone ||
-				d.klima.skred100?.inZone ||
-				d.risiko?.kvikkleire?.inZone);
-		const risikoFail = d.risiko?.radon?.level === "høy";
-		const risikoWarn =
-			d.risiko?.radon?.level === "moderat" ||
-			(d.risiko?.stoy?.veg?.length ?? 0) > 0 ||
-			d.risiko?.stoy?.jernbane?.inZone ||
-			d.risiko?.stoy?.militar !== null;
-		const miljoFail =
-			d.risiko?.naturvern?.hasStrictProtection ||
-			d.risiko?.grunnforurensning?.hasHighRisk;
-		const miljoWarn =
-			!miljoFail &&
-			((d.risiko?.kulturminner?.count ?? 0) > 0 ||
-				(d.risiko?.naturvern?.count ?? 0) > 0 ||
-				(d.risiko?.grunnforurensning?.count ?? 0) > 0);
-		return {
-			klima: klimaFail ? "fail" : d.klima ? "pass" : "none",
-			risiko: risikoFail
-				? "fail"
-				: risikoWarn
-					? "warn"
-					: d.risiko
-						? "pass"
-						: "none",
-			miljo: miljoFail ? "fail" : miljoWarn ? "warn" : "pass",
-		};
-	}, [featureInfo]);
+	const tabStatuses = useTabStatuses(featureInfo);
 
 	/* ---- Side-panel tab definitions ---- */
 	const SIDE_PANEL_TABS: SidePanelTab[] = useMemo(
 		() => [
 			{ id: "eiendommer", label: "Eiendommer" },
-			{ id: "generelt", label: "Generelt" },
+			{
+				id: "generelt",
+				label: "Generelt",
+				icon: <StatusDot s={(tabStatuses.generelt ?? "none") as DotStatus} />,
+			},
 			{
 				id: "klima",
 				label: "Klima",
-				icon: <StatusDot s={tabStatuses.klima ?? "none"} />,
+				icon: <StatusDot s={(tabStatuses.klima ?? "none") as DotStatus} />,
 			},
 			{
 				id: "risiko",
 				label: "Risiko",
-				icon: <StatusDot s={tabStatuses.risiko ?? "none"} />,
+				icon: <StatusDot s={(tabStatuses.risiko ?? "none") as DotStatus} />,
 			},
 			{
 				id: "miljo",
 				label: "Miljø",
-				icon: <StatusDot s={tabStatuses.miljo ?? "none"} />,
+				icon: <StatusDot s={(tabStatuses.miljo ?? "none") as DotStatus} />,
 			},
 		],
 		[tabStatuses],
@@ -180,26 +103,13 @@ export const MapPageView = () => {
 		}
 	}, [activeResult, activeLoading, activeError, addResult]);
 
-	/* ---- Toast on error ---- */
-	useEffect(() => {
-		if (search.error) addToast("warning", search.error);
-	}, [search.error, addToast]);
-
-	useEffect(() => {
-		if (mapClick.error) addToast("warning", mapClick.error);
-	}, [mapClick.error, addToast]);
-
-	/* ---- Toast when no results ---- */
-	useEffect(() => {
-		if (
-			activeResult &&
-			!activeLoading &&
-			!activeError &&
-			activeResult.properties.length === 0
-		) {
-			addToast("attention", "Fant ingen eiendommer for dette søket.");
-		}
-	}, [activeResult, activeLoading, activeError, addToast]);
+	/* ---- Toast notifications for search outcomes ---- */
+	const showNoResults =
+		!!activeResult &&
+		!activeLoading &&
+		!activeError &&
+		activeResult.properties.length === 0;
+	usePropertySelectionToasts(search.error, mapClick.error, showNoResults);
 
 	/* ---- Search handler ---- */
 	const handleSearch = useCallback(
@@ -341,141 +251,21 @@ export const MapPageView = () => {
 				onResizingChange={setPanelResizing}
 				onClose={togglePanel}
 				tabs={SIDE_PANEL_TABS}
-				renderContent={(tabId) => {
-					switch (tabId) {
-						case "eiendommer":
-							return (
-								<PropertyTable
-									items={selected}
-									highlightedKey={highlightedKey}
-									activeKey={activeKey}
-									onRemove={removeByKey}
-									onMoveUp={moveUp}
-									onMoveDown={moveDown}
-									onHighlight={setHighlightedKey}
-									onSetActive={setActiveKey}
-								/>
-							);
-						case "generelt":
-							if (!activeItem) return <TabEmptyState />;
-							return (
-								<div>
-									<ActivePropertyHeader
-										item={activeItem.item}
-										index={activeItem.index}
-									/>
-									{featureInfo?.status === "loading" && (
-										<div className="fi-loading">
-											<i className="sweco-spinner" aria-hidden="true" />
-											<span>Henter eiendomsdata…</span>
-										</div>
-									)}
-									{featureInfo?.status === "error" && (
-										<div className="fi-error">
-											<AlertCircle size={14} />
-											<span>{featureInfo.error}</span>
-										</div>
-									)}
-									{featureInfo?.status === "loaded" && (
-										<GenereltTab data={featureInfo.data.generelt} />
-									)}
-								</div>
-							);
-						case "klima":
-							if (!activeItem) return <TabEmptyState />;
-							return (
-								<div>
-									<ActivePropertyHeader
-										item={activeItem.item}
-										index={activeItem.index}
-									/>
-									{featureInfo?.status === "loading" && (
-										<div className="fi-loading">
-											<i className="sweco-spinner" aria-hidden="true" />
-											<span>Henter klimadata…</span>
-										</div>
-									)}
-									{featureInfo?.status === "error" && (
-										<div className="fi-error">
-											<AlertCircle size={14} />
-											<span>{featureInfo.error}</span>
-										</div>
-									)}
-									{featureInfo?.status === "loaded" &&
-										featureInfo.data.klima && (
-											<KlimaTab
-												data={featureInfo.data.klima}
-												kvikkleire={featureInfo.data.risiko?.kvikkleire ?? null}
-											/>
-										)}
-								</div>
-							);
-						case "risiko":
-							if (!activeItem) return <TabEmptyState />;
-							return (
-								<div>
-									<ActivePropertyHeader
-										item={activeItem.item}
-										index={activeItem.index}
-									/>
-									{featureInfo?.status === "loading" && (
-										<div className="fi-loading">
-											<i className="sweco-spinner" aria-hidden="true" />
-											<span>Henter risikodata…</span>
-										</div>
-									)}
-									{featureInfo?.status === "error" && (
-										<div className="fi-error">
-											<AlertCircle size={14} />
-											<span>{featureInfo.error}</span>
-										</div>
-									)}
-									{featureInfo?.status === "loaded" &&
-										featureInfo.data.risiko && (
-											<RisikoTab data={featureInfo.data.risiko} />
-										)}
-								</div>
-							);
-						case "miljo":
-							if (!activeItem) return <TabEmptyState />;
-							return (
-								<div>
-									<ActivePropertyHeader
-										item={activeItem.item}
-										index={activeItem.index}
-									/>
-									{featureInfo?.status === "loading" && (
-										<div className="fi-loading">
-											<i className="sweco-spinner" aria-hidden="true" />
-											<span>Henter miljødata…</span>
-										</div>
-									)}
-									{featureInfo?.status === "error" && (
-										<div className="fi-error">
-											<AlertCircle size={14} />
-											<span>{featureInfo.error}</span>
-										</div>
-									)}
-									{featureInfo?.status === "loaded" && (
-										<MiljoTab
-											kulturminner={
-												featureInfo.data.risiko?.kulturminner ?? null
-											}
-											stoy={featureInfo.data.risiko?.stoy ?? null}
-											naturvern={
-												featureInfo.data.risiko?.naturvern ?? null
-											}
-											grunnforurensning={
-												featureInfo.data.risiko?.grunnforurensning ?? null
-											}
-										/>
-									)}
-								</div>
-							);
-						default:
-							return null;
-					}
-				}}
+				renderContent={(tabId) => (
+					<FeatureInfoTabs
+						tabId={tabId}
+						activeItem={activeItem}
+						featureInfo={featureInfo}
+						selected={selected}
+						highlightedKey={highlightedKey}
+						activeKey={activeKey}
+						removeByKey={removeByKey}
+						moveUp={moveUp}
+						moveDown={moveDown}
+						onHighlight={setHighlightedKey}
+						onSetActive={setActiveKey}
+					/>
+				)}
 				preFooter={
 					screenshotBase64 ? (
 						<div className="map-side-panel__screenshot-preview">

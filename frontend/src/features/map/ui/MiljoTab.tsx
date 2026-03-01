@@ -30,16 +30,22 @@ type Props = {
 	grunnforurensning: GrunnforurensningData | null;
 };
 
-/* ---- Naturvern helpers ---- */
+/* ---- Shared status helper ---- */
 
-function naturvernStatus(
-	data: NaturvernData | null,
+function deriveCountStatus<T extends { count: number }>(
+	data: T | null,
+	isHighRisk: (d: T) => boolean,
 ): "pass" | "warn" | "fail" | "no-data" {
 	if (!data) return "no-data";
-	if (data.hasStrictProtection) return "fail";
+	if (isHighRisk(data)) return "fail";
 	if (data.count > 0) return "warn";
 	return "pass";
 }
+
+/* ---- Naturvern helpers ---- */
+
+const naturvernStatus = (data: NaturvernData | null) =>
+	deriveCountStatus(data, (d) => d.hasStrictProtection);
 
 function naturvernSummary(data: NaturvernData | null): string {
 	if (!data) return "Ingen data tilgjengelig";
@@ -50,14 +56,8 @@ function naturvernSummary(data: NaturvernData | null): string {
 
 /* ---- Grunnforurensning helpers ---- */
 
-function grunnforurensningStatus(
-	data: GrunnforurensningData | null,
-): "pass" | "warn" | "fail" | "no-data" {
-	if (!data) return "no-data";
-	if (data.hasHighRisk) return "fail";
-	if (data.count > 0) return "warn";
-	return "pass";
-}
+const grunnforurensningStatus = (data: GrunnforurensningData | null) =>
+	deriveCountStatus(data, (d) => d.hasHighRisk);
 
 function grunnforurensningSlot(data: GrunnforurensningData | null): string {
 	if (!data) return "Ingen data tilgjengelig";
@@ -68,14 +68,8 @@ function grunnforurensningSlot(data: GrunnforurensningData | null): string {
 
 /* ---- Kulturminner helpers ---- */
 
-function kulturminnerStatus(
-	data: KulturminneData | null,
-): "pass" | "warn" | "fail" | "no-data" {
-	if (!data) return "no-data";
-	if (data.hasProtected) return "fail";
-	if (data.count > 0) return "warn";
-	return "pass";
-}
+const kulturminnerStatus = (data: KulturminneData | null) =>
+	deriveCountStatus(data, (d) => d.hasProtected);
 
 function kulturminnerSummary(data: KulturminneData | null): string {
 	if (!data) return "Ingen data tilgjengelig";

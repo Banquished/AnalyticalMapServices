@@ -628,7 +628,8 @@
 		color: inherit;
 		height: 100%;
 
-		/* Align logo/mark with nav rows */
+		/* Align logo/mark with nav rows — gap mirrors sidebar-link behaviour */
+		column-gap: var(--sidebar-link-gap);
 		padding-left: var(--sidebar-link-px-l);
 		padding-right: var(--sidebar-link-px-r);
 	}

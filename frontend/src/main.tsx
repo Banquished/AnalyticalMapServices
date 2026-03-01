@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import './index.css'
 import { initTheme } from './stores/themeStore'
+import { AppErrorBoundary } from './shared/ui/AppErrorBoundary'
 import { ToastContainer } from './shared/ui/toast'
 import { router } from './router'
 
@@ -11,7 +12,9 @@ initTheme()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
-    <ToastContainer />
+    <AppErrorBoundary>
+      <RouterProvider router={router} />
+      <ToastContainer />
+    </AppErrorBoundary>
   </StrictMode>,
 )
