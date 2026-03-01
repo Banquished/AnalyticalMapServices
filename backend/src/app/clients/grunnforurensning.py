@@ -5,11 +5,7 @@ API: https://kart.miljodirektoratet.no/arcgis/rest/services/grunnforurensning2/M
 Layer 1 = forurenset_omrade (contaminated area polygons)
 """
 
-import logging
-
 from app.clients.http import ApiError, fetch_json
-
-logger = logging.getLogger(__name__)
 
 _BASE_URL = (
     "https://kart.miljodirektoratet.no/arcgis/rest/services/grunnforurensning2/MapServer"

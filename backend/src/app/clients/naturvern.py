@@ -5,11 +5,7 @@ API: https://kart.miljodirektoratet.no/arcgis/rest/services/vern/MapServer
 Layer 0 = naturvern_omrade (protected area polygons)
 """
 
-import logging
-
 from app.clients.http import ApiError, fetch_json
-
-logger = logging.getLogger(__name__)
 
 _BASE_URL = "https://kart.miljodirektoratet.no/arcgis/rest/services/vern/MapServer"
 _LAYER_ID = 0
