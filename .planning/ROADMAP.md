@@ -27,7 +27,12 @@
   2. Querying a naturvern, grunnforurensning, or kulturminner ArcGIS endpoint that returns an API-level error raises a typed exception (visible in backend logs), not a silent empty list
   3. Calling `GET /api/v1/properties/areas` without `ost` or `nord` params returns HTTP 422, not a result computed from 0.0 coordinates
   4. All router endpoints (`addresses.py`, `properties.py`, `feature_info.py`) return a consistent JSON error shape for `ApiError` and timeout conditions, not unhandled 500 traces
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Fix _fetch_with_retry @overload (TYPES-01) and _safe[T] generic (TYPES-02); add [tool.mypy] to pyproject.toml
+- [ ] 01-02-PLAN.md — Raise ApiError on ArcGIS API errors in naturvern, grunnforurensning, kulturminner clients (ERR-01)
+- [ ] 01-03-PLAN.md — Add consistent try/except wrappers to all router endpoints; fix 0.0 coordinate default in search_properties (ERR-02, ERR-03)
 
 ### Phase 2: Frontend Architecture Split
 **Goal**: `MapSearchControl.tsx` and `MapPageView.tsx` each respect the 6-layer feature architecture — HTTP logic is in `api/`, state logic is in `hooks/`, rendering is in `ui/`.
@@ -68,7 +73,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Backend Correctness | 0/TBD | Not started | - |
+| 1. Backend Correctness | 0/3 | Not started | - |
 | 2. Frontend Architecture Split | 0/TBD | Not started | - |
 | 3. Frontend Polish & Zod Validation | 0/TBD | Not started | - |
 | 4. Docker & Deployment Readiness | 0/TBD | Not started | - |
