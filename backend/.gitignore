@@ -1,0 +1,19 @@
+/src/app/__pycache__/
+/src/app/migrations/__pycache__/
+/**.pyc
+**/__pycache__/
+
+# Ignore .env files
+.env
+.env.local
+
+# Ignore log files
+*.log 
+
+# Ignore database files
+*.db  
+
+# Ignore virtual environment directories
+venv/ 
+.venv/
+.ruff_cache/

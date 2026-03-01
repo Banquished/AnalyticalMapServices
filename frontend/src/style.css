@@ -1,0 +1,1565 @@
+@import 'tailwindcss';
+
+/* Make dark: respond to html[data-theme="dark"] */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* 1. Design tokens (Tailwind theme variables) */
+@theme {
+	/* Typography */
+	--font-sans:
+		'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+		'Segoe UI', sans-serif;
+	--font-mono:
+		ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+		'Courier New', monospace;
+
+	/* Headline sizes */
+	--text-h1: 3.2rem;
+	--text-h2: 2.6rem;
+	--text-h3: 2.1rem;
+	--text-h4: 1.6rem;
+
+	--leading-h1: 1.2;
+	--leading-h2: 1.1;
+	--leading-h3: 1.1;
+	--leading-h4: 1.1;
+
+	/* Layout */
+	--page-gutter: 1rem;
+	--content-max: 138rem;
+	--sidebar-w: 13rem;
+	--sidebar-w-collapsed: 4.25rem;
+	--app-header-h: 3.5rem;
+	--app-content-py: 1.5rem;
+
+	/* Brand sizing */
+	--sidebar-brand-logo-h: 1.9rem;
+	--sidebar-brand-mark-h: 1.25rem;
+	--sidebar-brand-mark-scale: 1.28;
+
+	/* ============================================================
+		Auvora palette (OKLCH) | Navy neutrals + Azure primary
+		DARK is the default. Light overrides in :root[data-theme='light'].
+	   ============================================================ */
+
+	/* Background steps (DARK default) */
+	--color-bg-dark: oklch(0.1 0.015 255);
+	--color-bg: oklch(0.13 0.015 255);
+	--color-bg-hero-dark: #0f172a;
+	--color-bg-light: oklch(0.17 0.015 255);
+	--color-bg-hero-light: #f8fafc;
+
+	/* Surfaces */
+	--color-surface: oklch(0.15 0.015 255);
+	--color-surface-raised: oklch(0.2 0.015 255);
+
+	/* Borders + highlight */
+	--color-border-subtle: oklch(0.28 0.015 255);
+	--color-border-strong: oklch(0.36 0.015 255);
+	--color-highlight: oklch(0.22 0.015 255);
+
+	/* Text */
+	--color-text: oklch(0.96 0.01 255);
+	--color-text-muted: oklch(0.78 0.01 255);
+
+	/* Action */
+	--color-accent: oklch(0.72 0.14 255);
+	--color-accent-soft: oklch(0.68 0.14 255);
+	--color-accent-muted: oklch(0.84 0.06 255);
+
+	/* Secondary */
+	--color-secondary: oklch(0.72 0.12 285);
+
+	/* Text on accent (dark UI) */
+	--color-text-on-accent: oklch(0.11 0.015 255);
+
+	/* Feedback */
+	--color-success: oklch(0.7 0.11 155);
+	--color-warning: oklch(0.76 0.12 90);
+	--color-danger: oklch(0.65 0.13 25);
+	--color-info: oklch(0.72 0.1 230);
+
+	/* Soft tints */
+	--color-danger-soft: color-mix(
+		in oklab,
+		var(--color-danger) 24%,
+		var(--color-surface) 76%
+	);
+	--color-warning-soft: color-mix(
+		in oklab,
+		var(--color-warning) 24%,
+		var(--color-surface) 76%
+	);
+	--color-success-soft: color-mix(
+		in oklab,
+		var(--color-success) 24%,
+		var(--color-surface) 76%
+	);
+	--color-info-soft: color-mix(
+		in oklab,
+		var(--color-info) 24%,
+		var(--color-surface) 76%
+	);
+
+	/* Dashboard / charts */
+	--color-chart-1: var(--color-accent);
+	--color-chart-2: var(--color-secondary);
+	--color-chart-3: var(--color-info);
+	--color-chart-4: var(--color-success);
+	--color-chart-5: var(--color-warning);
+	--color-chart-6: var(--color-danger);
+
+	/* Sweco map palette (property selection + active states) */
+	--color-map-green: #87be73;
+	--color-map-green-dark: #538840;
+	--color-map-green-darkest: #2d6a1e;
+	--color-map-green-pale: #bde3af;
+	--color-map-green-bg: #e8f5e3;
+
+	/* Optional chart UI tokens */
+	--color-chart-grid: color-mix(
+		in oklab,
+		var(--color-border-strong) 55%,
+		transparent
+	);
+	--color-chart-axis: var(--color-text-muted);
+	--color-chart-tooltip-bg: var(--color-surface-raised);
+
+	/* Radius */
+	--radius-xs: 0.125rem;
+	--radius-sm: 0.25rem;
+	--radius-md: 0.375rem;
+	--radius-lg: 0.5rem;
+	--radius-xl: 0.75rem;
+	--radius-2xl: 1rem;
+	--radius-full: 9999px;
+
+	/* Control sizing (for inputs, buttons, selects) */
+	--control-h-sm: 2rem;
+	--control-h-md: 2.25rem;
+	--control-h-lg: 2.5rem;
+	--control-h-xl: 2.75rem;
+
+	--control-px-sm: 0.75rem;
+	--control-px-md: 0.75rem;
+	--control-px-lg: 1rem;
+	--control-px-xl: 1.25rem;
+
+	--control-text-sm: 0.75rem;
+	--control-text-md: 0.875rem;
+	--control-text-lg: 0.875rem;
+	--control-text-xl: 1rem;
+
+	/* Focus ring */
+	--ring-color: var(--color-accent);
+	--ring-width: 2px;
+	--ring-offset: 2px;
+
+	/* Shadows */
+	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.28);
+	--shadow-md: 0 6px 14px -6px rgb(0 0 0 / 0.34);
+	--shadow-lg: 0 14px 28px -10px rgb(0 0 0 / 0.4);
+	--shadow-xl: 0 24px 42px -14px rgb(0 0 0 / 0.46);
+
+	/* Breakpoints */
+	--breakpoint-sm: 40rem;
+	--breakpoint-md: 48rem;
+	--breakpoint-lg: 64rem;
+	--breakpoint-xl: 80rem;
+	--breakpoint-2xl: 96rem;
+
+	/* Motion */
+	--duration-fast: 150ms;
+	--duration-normal: 200ms;
+	--duration-slow: 300ms;
+
+	--easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+	--easing-snappy: cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* 2. Base styles */
+@layer base {
+	html,
+	body,
+	#root {
+		height: 100%;
+		width: 100%;
+	}
+
+	html,
+	body {
+		overflow-x: clip;
+	}
+
+	@supports not (overflow: clip) {
+		html,
+		body {
+			overflow-x: hidden;
+		}
+	}
+
+	:root {
+		color-scheme: dark;
+		--app-gutter-x: 1rem;
+	}
+
+	@media (min-width: 40rem) {
+		:root {
+			--app-gutter-x: 1.5rem;
+		}
+	}
+	@media (min-width: 64rem) {
+		:root {
+			--app-gutter-x: 2rem;
+		}
+	}
+
+	:root[data-theme='dark'],
+	[data-theme='dark'] {
+		color-scheme: dark;
+	}
+
+	html {
+		font-family: var(--font-sans);
+		background-color: var(--color-bg);
+		color: var(--color-text);
+		text-size-adjust: 100%;
+		overflow-y: scroll;
+		scrollbar-gutter: stable;
+	}
+
+	body {
+		margin: 0;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4 {
+		font-weight: 600;
+		letter-spacing: -0.02em;
+	}
+
+	h1 {
+		font-size: var(--text-h1);
+		line-height: var(--leading-h1);
+	}
+
+	h2 {
+		font-size: var(--text-h2);
+		line-height: var(--leading-h2);
+	}
+
+	h3 {
+		font-size: var(--text-h3);
+		line-height: var(--leading-h3);
+	}
+
+	h4 {
+		font-size: var(--text-h4);
+		line-height: var(--leading-h4);
+	}
+
+	p {
+		line-height: 1.6;
+	}
+
+	a {
+		color: var(--color-accent);
+		text-decoration: none;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+
+	::selection {
+		background-color: color-mix(in oklab, var(--color-accent) 30%, transparent);
+		color: var(--color-text);
+	}
+
+	button,
+	input,
+	textarea,
+	select {
+		font: inherit;
+	}
+
+	:where(button, a, input, textarea, select):focus-visible {
+		outline: var(--ring-width) solid var(--ring-color);
+		outline-offset: var(--ring-offset);
+	}
+
+	:where(html, body, #root) {
+		scrollbar-width: none;
+		scrollbar-color: color-mix(
+				in oklab,
+				var(--color-border-strong) 55%,
+				transparent
+			)
+			transparent;
+	}
+
+	/* Subtle themed scrollbars (Chromium/WebKit) */
+	:where(html, body, #root)::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+	}
+	:where(html, body, #root)::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	:where(html, body, #root)::-webkit-scrollbar-thumb {
+		background-color: color-mix(
+			in oklab,
+			var(--color-border-strong) 60%,
+			transparent
+		);
+		border-radius: 9999px;
+		border: 3px solid transparent;
+		background-clip: content-box;
+	}
+	:where(html, body, #root)::-webkit-scrollbar-thumb:hover {
+		background-color: color-mix(
+			in oklab,
+			var(--color-border-strong) 80%,
+			transparent
+		);
+	}
+
+	/* Light theme overrides */
+	:root[data-theme='light'],
+	[data-theme='light'] {
+		color-scheme: light;
+
+		--color-bg-dark: oklch(0.95 0.01 255);
+		--color-bg: oklch(0.98 0.01 255);
+		--color-bg-light: oklch(1 0 255);
+
+		--color-surface: oklch(1 0 255);
+		--color-surface-raised: oklch(0.96 0.01 255);
+
+		--color-border-subtle: oklch(0.88 0.01 255);
+		--color-border-strong: oklch(0.76 0.01 255);
+
+		--color-highlight: oklch(1 0 255);
+
+		--color-text: oklch(0.18 0.01 255);
+		--color-text-muted: oklch(0.46 0.01 255);
+
+		--color-accent: oklch(0.46 0.15 255);
+		--color-accent-soft: oklch(0.42 0.15 255);
+		--color-accent-muted: oklch(0.56 0.08 255);
+
+		--color-secondary: oklch(0.48 0.14 285);
+
+		--color-text-on-accent: oklch(0.99 0 255);
+
+		--color-success: oklch(0.5 0.12 155);
+		--color-warning: oklch(0.55 0.13 90);
+		--color-danger: oklch(0.52 0.14 25);
+		--color-info: oklch(0.52 0.12 230);
+
+		--color-danger-soft: color-mix(
+			in oklab,
+			var(--color-danger) 20%,
+			var(--color-surface) 80%
+		);
+		--color-warning-soft: color-mix(
+			in oklab,
+			var(--color-warning) 20%,
+			var(--color-surface) 80%
+		);
+		--color-success-soft: color-mix(
+			in oklab,
+			var(--color-success) 20%,
+			var(--color-surface) 80%
+		);
+		--color-info-soft: color-mix(
+			in oklab,
+			var(--color-info) 20%,
+			var(--color-surface) 80%
+		);
+
+		--shadow-sm: 0 1px 2px 0 rgb(2 6 23 / 0.06);
+		--shadow-md: 0 4px 6px -1px rgb(2 6 23 / 0.1);
+		--shadow-lg: 0 10px 15px -3px rgb(2 6 23 / 0.14);
+		--shadow-xl: 0 20px 25px -5px rgb(2 6 23 / 0.18);
+	}
+}
+
+/* 3. Components */
+@layer components {
+	/* ============================================================
+	   AUVORA DESIGN SYSTEM — Official Component Inventory
+	   ============================================================
+	   
+	   This design system provides a stable, documented set of primitives
+	   for building consistent, accessible UIs throughout Auvora.
+	   
+	   CORE PRIMITIVES:
+	   
+	   1. BUTTONS
+	      Base: .btn
+	      Variants: .btn-primary, .btn-secondary, .btn-danger, .btn-ghost, .btn-link
+	      Sizes: .btn-sm, .btn-md (default), .btn-lg, .btn-xl
+	      Modifiers: .btn-icon, .btn-rounded
+	      
+	      Example:
+	      <button class="btn btn-primary btn-lg">
+	        Save Changes
+	      </button>
+	      
+	      <button class="btn btn-secondary btn-icon">
+	        <Icon />
+	      </button>
+	   
+	   2. FORMS & CONTROLS
+	      Wrapper: .field (or .input-root for backwards compat)
+	      Label: .label (or .input-label for backwards compat)
+	      Controls: .input, .select, .textarea (or .input-field for backwards compat)
+	      Sizes: .control-sm, .control-md (default), .control-lg, .control-xl
+	      Helpers: .helper, .error, .field-error
+	      Checkbox: .checkbox, .checkbox-sm
+	      
+	      Example:
+	      <div class="field">
+	        <label class="label" for="name">Name</label>
+	        <input id="name" type="text" class="input control-md" />
+	        <span class="helper">Enter your full name</span>
+	      </div>
+	   
+	   3. CARDS
+	      Base: .card
+	      Sections: .card-header, .card-body, .card-footer
+	      Typography: .card-title, .card-subtitle
+	      Padding: .card-pad-sm, .card-pad-md, .card-pad-lg (or .card-padding)
+	      Modifiers: .card-hoverable
+	      
+	      Example:
+	      <div class="card">
+	        <div class="card-header card-pad-md">
+	          <h3 class="card-title">Dashboard</h3>
+	        </div>
+	        <div class="card-body card-pad-md">
+	          Content here
+	        </div>
+	      </div>
+	   
+	   4. BADGES & CHIPS
+	      Base: .badge, .chip
+	      Sizes: .badge-sm, .badge-md
+	      Tones: .badge-neutral, .badge-success, .badge-warning, .badge-danger, .badge-info
+	      
+	      Example:
+	      <span class="badge badge-success badge-sm">Active</span>
+	      <span class="chip">Tag</span>
+	   
+	   5. MENUS & DROPDOWNS
+	      Container: .menu
+	      Header: .menu-header
+	      Items: .menu-item
+	      Separator: .menu-separator
+	      
+	      Example:
+	      <div class="menu">
+	        <div class="menu-header">Actions</div>
+	        <button class="menu-item">Edit</button>
+	        <button class="menu-item">Delete</button>
+	      </div>
+	   
+	   6. MODALS & DIALOGS
+	      Overlay: .modal-overlay
+	      Container: .modal
+	      Sections: .modal-header, .modal-body, .modal-footer
+	      Typography: .modal-title, .modal-subtitle
+	      
+	      Example:
+	      <div class="modal-overlay">
+	        <div class="modal">
+	          <div class="modal-header">
+	            <h2 class="modal-title">Confirm Action</h2>
+	          </div>
+	          <div class="modal-body">
+	            Are you sure?
+	          </div>
+	          <div class="modal-footer">
+	            <button class="btn btn-secondary">Cancel</button>
+	            <button class="btn btn-primary">Confirm</button>
+	          </div>
+	        </div>
+	      </div>
+	   
+	   7. TABLES
+	      Base: .table
+	      Cells: .table-th, .table-td
+	      Rows: .table-head-row, .table-row-clickable
+	      Modifiers: .table-zebra, .table-scroll
+	      Money: .money, .money-positive, .money-negative
+	   
+	   All components support dark and light themes automatically.
+	   Focus rings are consistent across all interactive elements.
+	   ============================================================ */
+
+	/* Global gutter helper (used on header/content/footer only) */
+	.app-gutter {
+		padding-inline: var(--app-gutter-x);
+	}
+
+	/* App shell: sidebar + content column */
+	.app-shell {
+		@apply flex min-h-screen w-full;
+		overflow-x: clip;
+	}
+
+	@supports not (overflow: clip) {
+		.app-shell {
+			overflow-x: hidden;
+		}
+	}
+
+	/* Content column (header + main + footer) */
+	.app-frame {
+		@apply flex min-w-0 flex-1 flex-col;
+	}
+
+	/* Make header height deterministic so its border aligns with sidebar brand border */
+	.app-header {
+		@apply flex items-center justify-between border-b border-border-subtle bg-bg backdrop-blur;
+		height: var(--app-header-h);
+		padding-block: 0;
+		/* Ensure header dropdowns (UserChip) appear above sticky elements like BulkActionBar (z-index: 30) */
+		position: relative;
+		z-index: 50;
+	}
+
+	.app-main {
+		@apply flex-1 min-w-0;
+	}
+
+	.app-content {
+		@apply min-w-0;
+		padding-block: var(--app-content-py);
+	}
+
+	.app-content-inner {
+		@apply mx-auto w-full;
+		max-width: var(--content-max);
+	}
+
+	.app-footer {
+		@apply border-t border-border-subtle bg-bg py-4 text-xs text-text-muted;
+	}
+
+	.app-footer a {
+		color: inherit;
+	}
+	.app-footer a:hover {
+		color: var(--color-text);
+		text-decoration: none;
+	}
+
+	.app-header a:hover {
+		text-decoration: none;
+	}
+
+	/* Sidebar: full height, flush left */
+	.app-sidebar {
+		@apply hidden md:flex md:flex-col shrink-0 border-r border-border-subtle bg-bg;
+
+		width: var(--sidebar-w);
+		position: sticky;
+		top: 0;
+		height: 100dvh;
+
+		/* Prevent transient horizontal scrollbars during width transitions */
+		overflow-y: auto;
+		overflow-x: clip;
+
+		@supports not (overflow: clip) {
+			overflow-x: hidden;
+		}
+
+		/* Sidebar layout vars */
+		--sidebar-pad-x: 0.875rem;
+
+		/* One shared inset so brand and rows line up */
+		--sidebar-content-inset: 0.625rem;
+
+		/* Link layout vars (default = expanded) */
+		--sidebar-link-gap: 0.75rem;
+		--sidebar-link-px-l: var(--sidebar-content-inset);
+		--sidebar-link-px-r: var(--sidebar-content-inset);
+
+		padding: 0 var(--sidebar-pad-x) 1.25rem;
+
+		transition:
+			width var(--duration-slow) var(--easing-standard),
+			background-color var(--duration-normal) var(--easing-standard);
+		will-change: width;
+	}
+
+	.app-sidebar[data-collapsed='true'] {
+		width: var(--sidebar-w-collapsed);
+
+		/* Collapsed: no phantom spacing */
+		--sidebar-link-gap: 0;
+	}
+
+	.sidebar-brand {
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+
+		/* Match header row height and draw the divider with border-bottom */
+		height: var(--app-header-h);
+		border-bottom: 1px solid var(--color-border-subtle);
+
+		/* Full-bleed border (ignore sidebar padding) */
+		margin-inline: calc(var(--sidebar-pad-x) * -1);
+		padding-inline: var(--sidebar-pad-x);
+
+		overflow-x: clip;
+	}
+
+	.sidebar-brand-link {
+		@apply inline-flex items-center no-underline;
+		color: inherit;
+		height: 100%;
+
+		/* Align logo/mark with nav rows */
+		padding-left: var(--sidebar-link-px-l);
+		padding-right: var(--sidebar-link-px-r);
+	}
+
+	.sidebar-brand-logo {
+		height: var(--sidebar-brand-logo-h);
+		width: auto;
+		display: block;
+		object-fit: contain;
+	}
+
+	.sidebar-brand-mark {
+		height: var(--sidebar-brand-mark-h);
+		width: auto;
+		display: block;
+		object-fit: contain;
+	}
+
+	/* Full-bleed divider that ignores sidebar padding */
+	.sidebar-divider {
+		height: 1px;
+		background: color-mix(
+			in oklab,
+			var(--color-border-subtle) 90%,
+			transparent
+		);
+		margin: 1rem calc(var(--sidebar-pad-x) * -1);
+	}
+
+	.sidebar-divider--tight {
+		margin-top: 0.75rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.sidebar-nav {
+		@apply flex flex-col gap-1;
+		min-width: 0;
+		overflow-x: clip;
+	}
+
+	/* Add breathing room below the brand divider so the first active pill does not touch it */
+	.sidebar-nav--primary {
+		padding-top: 0.75rem;
+	}
+
+	.sidebar-nav--secondary {
+		padding-top: 0.5rem;
+	}
+
+	/* Link row primitives */
+	.sidebar-link {
+		@apply flex items-center rounded-md border border-transparent py-2 text-left transition-colors duration-200;
+		column-gap: var(--sidebar-link-gap);
+		padding-left: var(--sidebar-link-px-l);
+		padding-right: var(--sidebar-link-px-r);
+
+		min-width: 0;
+		position: relative;
+
+		overflow: hidden;
+	}
+
+	.sidebar-link,
+	.sidebar-link:hover {
+		text-decoration: none;
+	}
+
+	/* Use grid centering to avoid FontAwesome glyph-box weirdness */
+	.sidebar-icon {
+		display: grid;
+		place-items: center;
+		width: 1.25rem;
+		flex: 0 0 auto;
+		line-height: 1;
+	}
+
+	/* Label transition (smooth hide/show) */
+	.sidebar-link-label {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+		max-width: 14rem;
+		opacity: 1;
+		transform: translateX(0);
+
+		transition:
+			opacity var(--duration-normal) var(--easing-standard),
+			max-width var(--duration-slow) var(--easing-standard),
+			transform var(--duration-normal) var(--easing-standard);
+	}
+
+	.sidebar-trailing {
+		@apply ml-auto inline-flex w-3 justify-center;
+		flex: 0 0 auto;
+
+		opacity: 1;
+		max-width: 2rem;
+
+		transition:
+			opacity var(--duration-normal) var(--easing-standard),
+			max-width var(--duration-slow) var(--easing-standard);
+	}
+
+	/* Collapsed behavior: hide label + trailing, keep icon x stable */
+	.app-sidebar[data-collapsed='true'] .sidebar-link-label {
+		max-width: 0;
+		opacity: 0;
+		transform: translateX(-6px);
+	}
+
+	/* Collapsed: visually normalize favicon mark (SVG whitespace) */
+	.app-sidebar[data-collapsed='true'] .sidebar-brand-mark {
+		transform: scale(var(--sidebar-brand-mark-scale, 1.28));
+		transform-origin: left center;
+		transition: transform var(--duration-normal) var(--easing-standard);
+
+		/* If you still see lots of vertical whitespace, trim it (tune %) */
+		clip-path: inset(10% 0 10% 0);
+	}
+
+	.app-sidebar[data-collapsed='true'] .sidebar-trailing,
+	.app-sidebar[data-collapsed='true'] [data-sidebar-trailing] {
+		max-width: 0;
+		opacity: 0;
+	}
+
+	/* Collapse control should behave like a nav row */
+	.sidebar-collapse {
+		width: 100%;
+	}
+
+	/* Active / inactive */
+	.sidebar-link-active {
+		background-color: color-mix(in oklab, var(--color-accent) 22%, transparent);
+		border-color: color-mix(
+			in oklab,
+			var(--color-accent) 38%,
+			var(--color-border-subtle) 62%
+		);
+		color: var(--color-text);
+	}
+
+	.sidebar-link-inactive {
+		@apply text-text-muted hover:bg-surface hover:text-text;
+	}
+
+	/* Buttons */
+	.btn {
+		@apply inline-flex items-center justify-center gap-2 rounded-md border font-medium transition-colors duration-200;
+		@apply h-9 px-3 text-sm;
+		border-color: var(--color-border-subtle);
+	}
+
+	.btn-sm {
+		@apply h-8 px-3 text-xs;
+	}
+
+	.btn-md {
+		@apply h-9 px-3 text-sm;
+	}
+
+	.btn-lg {
+		@apply h-10 px-4 text-sm;
+	}
+
+	.btn-xl {
+		@apply h-11 px-5 text-base;
+	}
+
+	.btn-icon {
+		@apply h-9 w-9 p-0;
+	}
+
+	.btn-icon.btn-sm {
+		@apply h-8 w-8;
+	}
+
+	.btn-icon.btn-md {
+		@apply h-9 w-9;
+	}
+
+	.btn-icon.btn-lg {
+		@apply h-10 w-10;
+	}
+
+	.btn-icon.btn-xl {
+		@apply h-11 w-11;
+	}
+
+	.btn-rounded {
+		border-radius: var(--radius-full);
+	}
+
+	.btn-primary {
+		background-color: var(--color-accent);
+		color: var(--color-text-on-accent);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.btn-primary:hover {
+		background-color: var(--color-accent-soft);
+		box-shadow: var(--shadow-md);
+	}
+
+	.btn-secondary {
+		background-color: color-mix(
+			in oklab,
+			var(--color-surface) 35%,
+			transparent
+		);
+		color: var(--color-text-muted);
+	}
+
+	.btn-secondary:hover {
+		background-color: color-mix(
+			in oklab,
+			var(--color-surface) 55%,
+			transparent
+		);
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+	}
+
+	.btn-danger {
+		background-color: color-mix(in oklab, var(--color-danger) 55%, transparent);
+		border: 1px solid
+			color-mix(in oklab, var(--color-danger) 55%, var(--color-border-subtle));
+		color: var(--color-text);
+		box-shadow: var(--shadow-sm);
+	}
+
+	.btn-danger:hover {
+		background-color: color-mix(in oklab, var(--color-danger) 70%, transparent);
+		box-shadow: var(--shadow-md);
+	}
+
+	.btn-ghost {
+		background-color: transparent;
+		border-color: transparent;
+		color: var(--color-text-muted);
+	}
+
+	.btn-ghost:hover {
+		background-color: color-mix(
+			in oklab,
+			var(--color-surface) 25%,
+			transparent
+		);
+		color: var(--color-text);
+	}
+
+	.btn-link {
+		background-color: transparent;
+		border-color: transparent;
+		color: var(--color-accent);
+		text-decoration: underline;
+	}
+
+	.btn-link:hover {
+		color: var(--color-accent-soft);
+	}
+
+	.btn:disabled {
+		@apply opacity-50 cursor-not-allowed;
+	}
+
+	.btn:disabled:hover {
+		background-color: inherit;
+		color: inherit;
+		border-color: inherit;
+		box-shadow: none;
+	}
+
+	.btn-tertiary {
+		background-color: color-mix(
+			in oklab,
+			var(--color-surface-raised) 60%,
+			transparent
+		);
+		color: var(--color-text-muted);
+		border-color: transparent;
+	}
+
+	.btn-tertiary:hover {
+		background-color: var(--color-surface-raised);
+		color: var(--color-text);
+		border-color: var(--color-border-subtle);
+	}
+
+	.btn-warning {
+		background-color: color-mix(in oklab, var(--color-warning) 20%, transparent);
+		border-color: color-mix(in oklab, var(--color-warning) 40%, var(--color-border-subtle));
+		color: var(--color-warning);
+	}
+
+	.btn-warning:hover {
+		background-color: color-mix(in oklab, var(--color-warning) 30%, transparent);
+		border-color: color-mix(in oklab, var(--color-warning) 60%, var(--color-border-subtle));
+		color: var(--color-text);
+	}
+
+	/* Cards */
+	.card {
+		background-color: var(--color-surface);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--color-border-subtle);
+	}
+
+	.card-padding {
+		@apply p-4 sm:p-6;
+	}
+
+	.card-pad-sm {
+		@apply p-3;
+	}
+
+	.card-pad-md {
+		@apply p-4 sm:p-6;
+	}
+
+	.card-pad-lg {
+		@apply p-6 sm:p-8;
+	}
+
+	.card-header {
+		@apply border-b border-border-subtle;
+	}
+
+	.card-body {
+		@apply flex flex-col flex-1 min-w-0 w-full;
+	}
+
+	.card-footer {
+		@apply border-t border-border-subtle;
+	}
+
+	.card-title {
+		@apply text-lg font-semibold text-text;
+	}
+
+	.card-subtitle {
+		@apply text-sm text-text-muted;
+	}
+
+	.card-hoverable {
+		@apply transition-shadow duration-200;
+	}
+
+	.card-hoverable:hover {
+		box-shadow: var(--shadow-md);
+		border-color: var(--color-border-strong);
+	}
+
+	/* Chips */
+	.chip {
+		@apply inline-flex items-center rounded-full border border-border-subtle bg-surface/70 px-2 py-0.5 text-[0.7rem] text-text-muted;
+	}
+
+	/* Badges */
+	.badge {
+		@apply inline-flex items-center rounded-full border px-2 py-0.5 text-[0.7rem] font-medium;
+		border-color: var(--color-border-subtle);
+		background-color: var(--color-surface);
+		color: var(--color-text-muted);
+	}
+
+	.badge-sm {
+		@apply px-1.5 py-0.5 text-[0.65rem];
+	}
+
+	.badge-md {
+		@apply px-2 py-0.5 text-[0.7rem];
+	}
+
+	.badge-neutral {
+		border-color: var(--color-border-subtle);
+		background-color: var(--color-surface);
+		color: var(--color-text-muted);
+	}
+
+	.badge-success {
+		border-color: color-mix(
+			in oklab,
+			var(--color-success) 35%,
+			var(--color-border-subtle)
+		);
+		background-color: var(--color-success-soft);
+		color: var(--color-success);
+	}
+
+	.badge-warning {
+		border-color: color-mix(
+			in oklab,
+			var(--color-warning) 35%,
+			var(--color-border-subtle)
+		);
+		background-color: var(--color-warning-soft);
+		color: var(--color-warning);
+	}
+
+	.badge-danger {
+		border-color: color-mix(
+			in oklab,
+			var(--color-danger) 35%,
+			var(--color-border-subtle)
+		);
+		background-color: var(--color-danger-soft);
+		color: var(--color-danger);
+	}
+
+	.badge-info {
+		border-color: color-mix(
+			in oklab,
+			var(--color-info) 35%,
+			var(--color-border-subtle)
+		);
+		background-color: var(--color-info-soft);
+		color: var(--color-info);
+	}
+
+	/* Badge pill (compact neutral badge variant) */
+	.badge-pill {
+		@apply inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface/70 px-2 py-0.5 text-[0.7rem] text-text-muted;
+	}
+
+	/* Inputs & Forms */
+	/* New preferred naming: .field, .label, .input, .select, .textarea */
+	/* Keep old names for backwards compatibility */
+	.field,
+	.input-root {
+		@apply flex flex-col gap-1 text-xs;
+	}
+
+	.label,
+	.input-label {
+		@apply text-[0.7rem] uppercase tracking-[0.16em] text-text-muted;
+	}
+
+	.input,
+	.select,
+	.textarea,
+	.input-field {
+		@apply w-full rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-xs text-text shadow-sm transition-colors duration-150;
+	}
+
+	.input:focus-visible,
+	.select:focus-visible,
+	.textarea:focus-visible,
+	.input-field:focus-visible {
+		outline: none;
+		border-color: var(--ring-color);
+		box-shadow: 0 0 0 1px var(--ring-color);
+	}
+
+	/* Disabled state - lower visibility */
+	.input:disabled,
+	.select:disabled,
+	.textarea:disabled,
+	.input-field:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	/* Disabled label styling */
+	.input-root:has(.input:disabled) .input-label,
+	.input-root:has(.input-field:disabled) .input-label,
+	.field:has(.input:disabled) .label {
+		opacity: 0.6;
+	}
+
+	/* Control size variants */
+	.control-sm {
+		height: var(--control-h-sm);
+		padding-inline: var(--control-px-sm);
+		font-size: var(--control-text-sm);
+	}
+
+	.control-md {
+		height: var(--control-h-md);
+		padding-inline: var(--control-px-md);
+		font-size: var(--control-text-md);
+	}
+
+	.control-lg {
+		height: var(--control-h-lg);
+		padding-inline: var(--control-px-lg);
+		font-size: var(--control-text-lg);
+	}
+
+	.control-xl {
+		height: var(--control-h-xl);
+		padding-inline: var(--control-px-xl);
+		font-size: var(--control-text-xl);
+	}
+
+	/* Textarea should not have fixed height */
+	.textarea.control-sm,
+	.textarea.control-md,
+	.textarea.control-lg,
+	.textarea.control-xl {
+		height: auto;
+		min-height: 5rem;
+	}
+
+	/* Helper text and error messages */
+	.helper {
+		@apply text-xs text-text-muted;
+	}
+
+	.error,
+	.field-error {
+		@apply text-xs text-danger;
+	}
+
+	/* Checkbox styling */
+	.checkbox {
+		@apply w-4 h-4 rounded border border-border-subtle bg-surface cursor-pointer;
+		accent-color: var(--color-accent);
+	}
+
+	.checkbox-sm {
+		@apply w-3.5 h-3.5;
+	}
+
+	.checkbox:focus-visible {
+		outline: var(--ring-width) solid var(--ring-color);
+		outline-offset: var(--ring-offset);
+	}
+
+	/* Toast / inline banner */
+	.toast {
+		background-color: var(--color-surface);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--color-border-subtle);
+
+		@apply p-4 sm:p-6 flex flex-col gap-3 text-xs;
+		@apply sm:flex-row sm:items-start sm:justify-between;
+	}
+
+	/* ---------- Toast variants + semantic text colors ---------- */
+	.text-success {
+		color: var(--color-success);
+	}
+	.text-warning {
+		color: var(--color-warning);
+	}
+	.text-danger {
+		color: var(--color-danger);
+	}
+	.text-info {
+		color: var(--color-info);
+	}
+
+	/* Background and border utilities for soft semantic colors */
+	.bg-success-soft {
+		background-color: var(--color-success-soft);
+	}
+	.bg-warning-soft {
+		background-color: var(--color-warning-soft);
+	}
+	.bg-danger-soft {
+		background-color: var(--color-danger-soft);
+	}
+	.bg-info-soft {
+		background-color: var(--color-info-soft);
+	}
+
+	.border-success {
+		border-color: color-mix(
+			in oklab,
+			var(--color-success) 35%,
+			var(--color-border-subtle)
+		);
+	}
+	.border-warning {
+		border-color: color-mix(
+			in oklab,
+			var(--color-warning) 35%,
+			var(--color-border-subtle)
+		);
+	}
+	.border-danger {
+		border-color: color-mix(
+			in oklab,
+			var(--color-danger) 35%,
+			var(--color-border-subtle)
+		);
+	}
+	.border-info {
+		border-color: color-mix(
+			in oklab,
+			var(--color-info) 35%,
+			var(--color-border-subtle)
+		);
+	}
+
+	/* Toast internal layout helpers (optional but recommended) */
+	.toast__icon {
+		margin-top: 0.1rem;
+	}
+	.toast__title {
+		font-weight: 650;
+		font-size: 0.8rem;
+		line-height: 1.25;
+		color: var(--color-text);
+	}
+	.toast__message {
+		margin-top: 0.15rem;
+		font-size: 0.75rem;
+		line-height: 1.45;
+		color: var(--color-text-muted);
+	}
+	.toast__actions {
+		display: inline-flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+
+	/* Variant skins */
+	.toast-success {
+		background-color: var(--color-success-soft);
+		border-color: color-mix(
+			in oklab,
+			var(--color-success) 35%,
+			var(--color-border-subtle) 65%
+		);
+	}
+
+	.toast-warning {
+		background-color: var(--color-warning-soft);
+		border-color: color-mix(
+			in oklab,
+			var(--color-warning) 35%,
+			var(--color-border-subtle) 65%
+		);
+	}
+
+	.toast-danger {
+		background-color: var(--color-danger-soft);
+		border-color: color-mix(
+			in oklab,
+			var(--color-danger) 35%,
+			var(--color-border-subtle) 65%
+		);
+	}
+
+	.toast-info {
+		background-color: var(--color-info-soft);
+		border-color: color-mix(
+			in oklab,
+			var(--color-info) 35%,
+			var(--color-border-subtle) 65%
+		);
+	}
+
+	/* Menu / Dropdown */
+	.menu {
+		@apply overflow-hidden rounded-lg border border-border-subtle bg-surface shadow-lg;
+		min-width: 12rem;
+	}
+
+	.menu-header {
+		@apply px-3 py-2 text-[0.7rem] uppercase tracking-[0.16em] text-text-muted;
+		background-color: color-mix(in oklab, var(--color-bg) 20%, transparent);
+	}
+
+	.menu-item {
+		@apply w-full rounded-none px-3 py-2 text-left text-xs transition-colors duration-150;
+		background-color: transparent;
+		color: var(--color-text);
+		border: none;
+		cursor: pointer;
+	}
+
+	.menu-item:hover {
+		background-color: color-mix(in oklab, var(--color-bg) 20%, transparent);
+	}
+
+	.menu-item:focus-visible {
+		outline: var(--ring-width) solid var(--ring-color);
+		outline-offset: var(--ring-offset);
+	}
+
+	.menu-separator {
+		height: 1px;
+		background-color: var(--color-border-subtle);
+		margin: 0.25rem 0;
+	}
+
+	/* Table toolbar */
+	.toolbar-label {
+		@apply text-[0.65rem] uppercase tracking-[0.16em] text-text-muted;
+	}
+
+	.toolbar-select {
+		@apply h-9 py-0 text-sm shadow-none bg-surface/70;
+	}
+
+	/* Table affordances */
+	.table {
+		@apply w-full;
+	}
+
+	.table-head-row {
+		@apply bg-bg/20;
+	}
+
+	.table-row-clickable {
+		@apply cursor-pointer transition-colors duration-200 hover:bg-bg/15;
+	}
+
+	.table-th {
+		@apply px-3 py-2 text-left text-xs font-medium text-text-muted uppercase tracking-wider;
+	}
+
+	.table-td {
+		@apply px-3 py-2 text-sm text-text;
+	}
+
+	.table-zebra tbody tr:nth-child(even) {
+		background-color: color-mix(in oklab, var(--color-bg) 14%, transparent);
+	}
+
+	.table-scroll {
+		@apply overflow-auto;
+		scrollbar-gutter: stable;
+	}
+
+	/* Money helpers for tabular display */
+	.money {
+		@apply tabular-nums text-right;
+	}
+
+	.money-positive {
+		@apply tabular-nums text-right;
+		color: var(--color-money-income);
+	}
+
+	.money-negative {
+		@apply tabular-nums text-right;
+		color: var(--color-money-expense);
+	}
+
+	.panel-section {
+		@apply space-y-2;
+	}
+
+	.panel-section-title {
+		@apply text-sm font-semibold text-text;
+	}
+
+	.panel-note {
+		@apply text-xs text-text-muted;
+	}
+
+	.panel-link {
+		@apply text-xs underline;
+	}
+
+	.panel-list {
+		@apply divide-y divide-border-subtle/60 rounded-lg border border-border-subtle/60;
+		background-color: color-mix(
+			in oklab,
+			var(--color-surface) 88%,
+			transparent
+		);
+	}
+
+	.panel-row {
+		@apply flex items-start justify-between gap-3 px-3 py-2 text-xs;
+		min-width: 0;
+	}
+
+	.panel-row:hover {
+		background-color: color-mix(
+			in oklab,
+			var(--color-highlight) 45%,
+			transparent
+		);
+	}
+
+	.panel-row-left {
+		@apply min-w-0;
+	}
+
+	.panel-row-right {
+		@apply shrink-0;
+	}
+
+	.panel-row-title {
+		@apply truncate font-medium text-text;
+	}
+
+	.panel-row-meta {
+		@apply text-text-muted;
+	}
+
+	/* Key-value block (DataQuality) */
+	.panel-kv {
+		@apply divide-y divide-border-subtle/60 rounded-lg border border-border-subtle/60;
+		background-color: color-mix(
+			in oklab,
+			var(--color-surface) 88%,
+			transparent
+		);
+	}
+
+	.panel-kv-row {
+		@apply flex items-center justify-between gap-3 px-3 py-2 text-xs;
+	}
+
+	.panel-kv-label {
+		@apply text-text-muted;
+	}
+
+	.panel-kv-value {
+		@apply font-medium text-text;
+	}
+
+	/* Small KPI row inside panels */
+	.panel-kpi-row {
+		@apply flex items-baseline justify-between gap-3;
+	}
+
+	.panel-kpi-value {
+		@apply text-sm font-medium text-text;
+	}
+
+	/* Callouts */
+	.callout {
+		@apply rounded-lg border p-3 text-xs;
+	}
+
+	.callout-title {
+		@apply font-semibold text-text;
+	}
+
+	.callout-body {
+		@apply mt-1 text-text-muted;
+	}
+
+	.callout-info {
+		border-color: color-mix(
+			in oklab,
+			var(--color-info) 35%,
+			var(--color-border-subtle) 65%
+		);
+		background-color: color-mix(
+			in oklab,
+			var(--color-info-soft) 34%,
+			var(--color-surface) 66%
+		);
+	}
+
+	/* Sticky bulkbar: sits below app header */
+	.bulkbar-sticky {
+		position: sticky;
+		top: 0.5rem;
+		z-index: 30;
+	}
+
+	/* Slightly tighter card for bulk actions */
+	.bulkbar-card {
+		padding: 0.9rem;
+	}
+
+	@media (min-width: 40rem) {
+		.bulkbar-card {
+			padding: 1rem;
+		}
+	}
+
+	/* Expenses table look: zebra, softer separation, nicer hover */
+	.table-expenses {
+		width: 100%;
+	}
+
+	.table-expenses thead {
+		background-color: color-mix(in oklab, var(--color-bg) 24%, transparent);
+	}
+
+	.table-expenses tbody tr {
+		transition: background-color var(--duration-fast) var(--easing-standard);
+	}
+
+	.table-expenses tbody tr:nth-child(even) {
+		background-color: color-mix(in oklab, var(--color-bg) 14%, transparent);
+	}
+
+	.table-expenses tbody tr:hover {
+		background-color: color-mix(
+			in oklab,
+			var(--color-highlight) 55%,
+			transparent
+		);
+	}
+
+	.table-expenses tbody tr[data-selected='true'] {
+		background-color: color-mix(in oklab, var(--color-accent) 14%, transparent);
+	}
+
+	/* Softer row separation than a hard divider */
+	.table-expenses tbody td {
+		border-bottom: 1px solid
+			color-mix(in oklab, var(--color-border-subtle) 70%, transparent);
+	}
+
+	.table-expenses tbody tr:last-child td {
+		border-bottom: 0;
+	}
+
+	/* Checkbox visibility: “near invisible”, appears on hover/focus, always visible if checked */
+	.table-select {
+		opacity: 0;
+		transition: opacity var(--duration-fast) var(--easing-standard);
+	}
+
+	.table-expenses tbody tr:hover .table-select,
+	.table-expenses tbody tr:focus-within .table-select,
+	.table-select[data-checked='true'] {
+		opacity: 1;
+	}
+
+}
+
+/* Inset box-shadow overlay (used on the map page for depth cue) */
+.inset-shadow {
+	box-shadow: inset 0 0 40px 0 rgb(0 0 0 / 0.18);
+	pointer-events: none;
+}
