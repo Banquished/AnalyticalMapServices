@@ -7,7 +7,7 @@ Layer 0 = naturvern_omrade (protected area polygons)
 
 import logging
 
-from app.clients.http import fetch_json
+from app.clients.http import ApiError, fetch_json
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,10 @@ async def query_naturvern(lat: float, lng: float) -> list[dict]:
     if data is None:
         return []
     if "error" in data:
-        logger.warning("Naturvern API error: %s", data["error"])
-        return []
+        err = data.get("error", {})
+        raise ApiError(
+            "arcgis_error",
+            f"ArcGIS error from {_BASE_URL}: {err}",
+            status=err.get("code") if isinstance(err, dict) else None,
+        )
     return [f["attributes"] for f in data.get("features", [])]
