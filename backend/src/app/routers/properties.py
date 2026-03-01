@@ -1,16 +1,25 @@
+import logging
+from typing import Annotated
+
 import httpx
 from fastapi import APIRouter, HTTPException, Query
 
 from app.clients.http import ApiError
 from app.services.property import geokoding, properties_by_point, property_areas_by_point
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(tags=["properties"])
 
 
 @router.get("/properties/search")
 async def search_properties(
-    ost: float | None = Query(None, description="Longitude / East (WGS84)"),
-    nord: float | None = Query(None, description="Latitude / North (WGS84)"),
+    ost: Annotated[
+        float | None, Query(ge=-180.0, le=180.0, description="Longitude / East (WGS84)")
+    ] = None,
+    nord: Annotated[
+        float | None, Query(ge=-90.0, le=90.0, description="Latitude / North (WGS84)")
+    ] = None,
     koordsys: int = Query(4258, description="Input CRS SRID"),
     radius: int | None = Query(None, description="Search radius in metres"),
     treff_per_side: int | None = Query(None, alias="treffPerSide"),
@@ -53,13 +62,14 @@ async def search_properties(
     except HTTPException:
         raise  # re-raise 422 guard — don't convert to 502
     except (ApiError, httpx.TimeoutException) as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        logger.error("Upstream error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=502, detail="Upstream service unavailable") from exc
 
 
 @router.get("/properties/areas")
 async def get_property_areas(
-    ost: float = Query(..., description="Longitude / East (WGS84)"),
-    nord: float = Query(..., description="Latitude / North (WGS84)"),
+    ost: Annotated[float, Query(ge=-180.0, le=180.0, description="Longitude / East (WGS84)")],
+    nord: Annotated[float, Query(ge=-90.0, le=90.0, description="Latitude / North (WGS84)")],
     koordsys: int = Query(4258),
     radius: int | None = Query(None),
     maks_treff: int | None = Query(None, alias="maksTreff"),
@@ -76,7 +86,8 @@ async def get_property_areas(
             utkoordsys=utkoordsys,
         )
     except (ApiError, httpx.TimeoutException) as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        logger.error("Upstream error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=502, detail="Upstream service unavailable") from exc
 
 
 @router.get("/properties/geokoding")
@@ -103,4 +114,5 @@ async def get_geokoding_endpoint(
             utkoordsys=utkoordsys,
         )
     except (ApiError, httpx.TimeoutException) as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        logger.error("Upstream error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=502, detail="Upstream service unavailable") from exc
