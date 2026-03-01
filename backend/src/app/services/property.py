@@ -1,5 +1,8 @@
 """
-Property service — thin wrapper over Kartverket client.
+Property service — validation layer over Kartverket client.
+
+Add input validation, business rules, or data transformation here
+before delegating to the client. Currently a pass-through.
 """
 
 from app.clients.kartverket import (

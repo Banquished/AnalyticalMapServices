@@ -4,23 +4,10 @@ Geonorge Adresser API client.
 Base URL: https://ws.geonorge.no/adresser/v1
 """
 
-from typing import Any
-
+from app.clients._utils import build_url
 from app.clients.http import fetch_json_strict
 
 _BASE_URL = "https://ws.geonorge.no/adresser/v1"
-
-
-def _build_url(path: str, params: dict[str, Any]) -> tuple[str, dict[str, str]]:
-    def _fmt(v: Any) -> str:
-        if isinstance(v, bool):
-            return str(v).lower()           # True → "true"
-        if isinstance(v, float) and v.is_integer():
-            return str(int(v))              # 200.0 → "200"
-        return str(v)
-
-    cleaned = {k: _fmt(v) for k, v in params.items() if v is not None and v != ""}
-    return f"{_BASE_URL}{path}", cleaned
 
 
 async def search_addresses(
@@ -39,7 +26,7 @@ async def search_addresses(
     treff_per_side: int | None = None,
     side: int | None = None,
 ) -> dict:
-    url, params = _build_url("/sok", {
+    url, params = build_url(_BASE_URL,"/sok", {
         "sok": sok,
         "fuzzy": fuzzy,
         "sokemodus": sokemodus,
@@ -67,7 +54,7 @@ async def search_addresses_by_point(
     treff_per_side: int | None = None,
     side: int | None = None,
 ) -> dict:
-    url, params = _build_url("/punktsok", {
+    url, params = build_url(_BASE_URL,"/punktsok", {
         "lat": lat,
         "lon": lon,
         "radius": radius,

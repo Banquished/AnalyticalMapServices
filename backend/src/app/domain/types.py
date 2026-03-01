@@ -168,12 +168,20 @@ class KommuneplanData(_Base):
     details: dict[str, str] = {}
 
 
+class PlanleggingIgangsattData(_Base):
+    plannavn: str | None = None
+    plantype: str | None = None
+    igangsettingsdato: str | None = None
+    details: dict[str, str] = {}
+
+
 class GenereltData(_Base):
     matrikkelInfo: str
     details: dict[str, str] = {}
     serviceError: str | None = None
     kommuneplan: KommuneplanData | None = None
     kommunedelplan: KommuneplanData | None = None
+    planleggingIgangsatt: PlanleggingIgangsattData | None = None
 
 
 # ---------------------------------------------------------------------------

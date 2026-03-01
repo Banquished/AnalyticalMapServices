@@ -2,7 +2,8 @@ from cachetools import TTLCache
 
 from app.config import settings
 
-# Module-level singleton — shared across all requests
+# In-process only. Each worker has its own cache.
+# For multi-worker deployments (gunicorn -w N), consider Redis.
 _cache: TTLCache = TTLCache(
     maxsize=settings.cache_max_size,
     ttl=settings.cache_ttl_seconds,

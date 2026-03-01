@@ -6,10 +6,13 @@ støy (veg/jernbane/militær), naturvern, grunnforurensning.
 """
 
 import contextlib
+import logging
 import re
 from datetime import UTC, datetime
 from typing import Literal
 
+from app.domain.parsers._common import is_no_results as _is_no_results
+from app.domain.parsers._common import is_service_exception as _is_service_exception
 from app.domain.types import (
     BerggrunData,
     DataFreshness,
@@ -27,18 +30,18 @@ from app.domain.types import (
     StoyVegItem,
 )
 
+logger = logging.getLogger(__name__)
+
+
 # ---------------------------------------------------------------------------
-# Helpers
+# Shared XML helpers
 # ---------------------------------------------------------------------------
 
 
-def _is_service_exception(raw: str) -> bool:
-    return "ServiceException" in raw or "msShapefileOpen" in raw
-
-
-def _is_no_results(raw: str) -> bool:
-    lower = raw.lower()
-    return "no features" in lower or "search returned no results" in lower
+def _parse_xml_field(raw: str, tag: str) -> str | None:
+    """Extract text content of a single XML tag via regex (handles simple WMS GML)."""
+    m = re.search(rf"<{re.escape(tag)}>([^<]+)</{re.escape(tag)}>", raw)
+    return m.group(1).strip() if m else None
 
 
 # ---------------------------------------------------------------------------
@@ -51,6 +54,13 @@ _RADON_LEVEL_MAP: dict[str, Literal["lav", "moderat", "høy", "usikker"]] = {
     "3": "høy",
     "0": "usikker",
 }
+
+
+def _extract_radon_from_xml(raw: str) -> tuple[str | None, str | None]:
+    """Extract (besk, grad) from a GML radon response. Returns (None, None) if absent."""
+    besk = _parse_xml_field(raw, "aktsomhetgrad_besk")
+    grad = _parse_xml_field(raw, "aktsomhetgrad")
+    return besk, grad
 
 
 def _guess_level_from_text(text: str) -> Literal["lav", "moderat", "høy", "usikker"]:
@@ -73,13 +83,10 @@ def parse_radon(raw: str | None) -> RadonResult | None:
         return None
 
     is_gml = "<msGMLOutput" in raw or "<?xml" in raw
-    besk_m = re.search(r"<aktsomhetgrad_besk>([^<]+)</aktsomhetgrad_besk>", raw)
-    grad_m = re.search(r"<aktsomhetgrad>([^<]+)</aktsomhetgrad>", raw)
+    besk, grad = _extract_radon_from_xml(raw)
 
-    if besk_m or grad_m:
-        besk = besk_m.group(1).strip() if besk_m else ""
-        grad = grad_m.group(1).strip() if grad_m else ""
-        level = _RADON_LEVEL_MAP.get(grad, _guess_level_from_text(besk))
+    if besk is not None or grad is not None:
+        level = _RADON_LEVEL_MAP.get(grad or "", _guess_level_from_text(besk or ""))
         return RadonResult(level=level, detail=besk or f"Aktsomhetsgrad {grad}")
 
     if is_gml:
@@ -123,19 +130,13 @@ def parse_losmasse(raw: str | None) -> LosmasseData | None:
         return None
     if _is_service_exception(raw):
         return None
-    type_m = re.search(r"<losmassetype_tekst>([^<]+)</losmassetype_tekst>", raw)
-    if not type_m:
+    rock_type = _parse_xml_field(raw, "losmassetype_tekst")
+    if not rock_type:
         return None
-    def_m = re.search(
-        r"<losmassetype_definisjon>([^<]+)</losmassetype_definisjon>", raw
-    )
-    scale_m = re.search(
-        r"<egnetmaalestokk_formattert>([^<]+)</egnetmaalestokk_formattert>", raw
-    )
     return LosmasseData(
-        type=type_m.group(1).strip(),
-        definition=def_m.group(1).strip() if def_m else None,
-        scale=scale_m.group(1).strip() if scale_m else None,
+        type=rock_type,
+        definition=_parse_xml_field(raw, "losmassetype_definisjon"),
+        scale=_parse_xml_field(raw, "egnetmaalestokk_formattert"),
     )
 
 
@@ -149,31 +150,29 @@ def parse_berggrunn(raw: str | None) -> BerggrunData | None:
         return None
     if _is_service_exception(raw):
         return None
-    rock_m = re.search(r"<hovedbergart_tekst>([^<]+)</hovedbergart_tekst>", raw)
-    if not rock_m:
+    rock_type = _parse_xml_field(raw, "hovedbergart_tekst")
+    if not rock_type:
         return None
-    unit_m = re.search(r"<bergartsenhet_tekst>([^<]+)</bergartsenhet_tekst>", raw)
-    tectonic_m = re.search(
-        r"<tektoniskhovedinndeling_tekst>([^<]+)</tektoniskhovedinndeling_tekst>", raw
-    )
-    metamorph_m = re.search(
-        r"<metamorffacies_tekst>([^<]+)</metamorffacies_tekst>", raw
-    )
-    age_m = re.search(
-        r"<dannelsesalder_visning_tekst>([^<]+)</dannelsesalder_visning_tekst>", raw
-    )
     return BerggrunData(
-        rockType=rock_m.group(1).strip(),
-        unit=unit_m.group(1).strip() if unit_m else None,
-        tectonicClassification=tectonic_m.group(1).strip() if tectonic_m else None,
-        metamorphicFacies=metamorph_m.group(1).strip() if metamorph_m else None,
-        formationAge=age_m.group(1).strip() if age_m else None,
+        rockType=rock_type,
+        unit=_parse_xml_field(raw, "bergartsenhet_tekst"),
+        tectonicClassification=_parse_xml_field(raw, "tektoniskhovedinndeling_tekst"),
+        metamorphicFacies=_parse_xml_field(raw, "metamorffacies_tekst"),
+        formationAge=_parse_xml_field(raw, "dannelsesalder_visning_tekst"),
     )
 
 
 # ---------------------------------------------------------------------------
 # Kulturminner
 # ---------------------------------------------------------------------------
+
+
+def _has_protected_status(items: list[KulturminneItem]) -> bool:
+    return any(
+        "fredet" in (item.protectionType or "").lower()
+        or "vedtaks" in (item.protectionType or "").lower()
+        for item in items
+    )
 
 
 def parse_kulturminner(attrs_list: list[dict]) -> KulturminneData | None:
@@ -191,12 +190,7 @@ def parse_kulturminner(attrs_list: list[dict]) -> KulturminneData | None:
         )
         for a in attrs_list
     ]
-    has_protected = any(
-        "fredet" in (item.protectionType or "").lower()
-        or "vedtaks" in (item.protectionType or "").lower()
-        for item in items
-    )
-    return KulturminneData(count=len(items), items=items, hasProtected=has_protected)
+    return KulturminneData(count=len(items), items=items, hasProtected=_has_protected_status(items))
 
 
 # ---------------------------------------------------------------------------
@@ -218,11 +212,17 @@ _STOY_CATEGORY_MAP: dict[str, str] = {
 }
 
 
-def _extract_data_year(begin: str | None, end: str | None) -> int | None:
-    date_str = end or begin
-    if not date_str:
+def _extract_data_year(begin: str | int | None, end: str | int | None) -> int | None:
+    date_val = end or begin
+    if date_val is None:
         return None
-    m = re.search(r"(\d{4})", date_str)
+    # ArcGIS REST returns date fields as epoch-ms integers
+    if isinstance(date_val, int):
+        try:
+            return datetime.fromtimestamp(date_val / 1000, tz=UTC).year
+        except (ValueError, OSError):
+            return None
+    m = re.search(r"(\d{4})", date_val)
     return int(m.group(1)) if m else None
 
 
@@ -243,9 +243,9 @@ def extract_stoy_veg_data_year(attrs_list: list[dict]) -> int | None:
     if not attrs_list:
         return None
     a = attrs_list[0]
-    return _extract_data_year(
-        a.get("measuretime_beginposition"), a.get("measuretime_endposition")
-    )
+    begin: str | int | None = a.get("measuretime_beginposition")
+    end: str | int | None = a.get("measuretime_endposition")
+    return _extract_data_year(begin, end)
 
 
 # ---------------------------------------------------------------------------
@@ -461,5 +461,6 @@ def parse_grunnforurensning(attrs_list: list[dict]) -> GrunnforurensningData | N
 def _safe[T](fn) -> T | None:
     try:
         return fn()
-    except Exception:
+    except Exception as exc:
+        logger.warning("Parser %s failed: %s", fn.__name__, exc, exc_info=True)
         return None

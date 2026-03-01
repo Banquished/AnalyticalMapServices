@@ -1,5 +1,8 @@
 """
-Address service — thin wrapper over Geonorge client.
+Address service — validation layer over Geonorge client.
+
+Add input validation, business rules, or data transformation here
+before delegating to the client. Currently a pass-through.
 """
 
 from app.clients.geonorge import search_addresses, search_addresses_by_point

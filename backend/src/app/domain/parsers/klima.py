@@ -21,8 +21,35 @@ def _parse_nve_geojson(raw: str) -> list[dict]:
         ):
             return [f.get("properties") or {} for f in parsed["features"]]
     except (json.JSONDecodeError, AttributeError):
-        pass
+        logger.warning("Failed to parse NVE GeoJSON")
     return []
+
+
+def _parse_nve_zone(
+    raw: str | None,
+    zone_label: str,
+    detail_fields: list[str],
+) -> FloodZoneResult | None:
+    """Shared helper for flood and landslide zone parsing.
+
+    Args:
+        raw: WMS response text.
+        zone_label: Norwegian label for the zone type (e.g. "flomsone").
+        detail_fields: Feature property keys to include in the detail string.
+    """
+    if not raw or not raw.strip():
+        return None
+    features = _parse_nve_geojson(raw)
+    if not features:
+        return None
+    first = features[0]
+    parts = [v for key in detail_fields if (v := first.get(key))]
+    detail = (
+        f"Eiendommen ligger i {zone_label} ({', '.join(str(p) for p in parts)})"
+        if parts
+        else f"Eiendommen ligger i {zone_label}"
+    )
+    return FloodZoneResult(inZone=True, detail=detail)
 
 
 def parse_flood_zone(raw: str | None) -> FloodZoneResult | None:
@@ -36,7 +63,7 @@ def parse_flood_zone(raw: str | None) -> FloodZoneResult | None:
     if interval := first.get("gjentaksinterval"):
         parts.append(f"{interval}-års gjentaksintervall")
     if status := first.get("statusKartlegging"):
-        parts.append(status)
+        parts.append(str(status))
     detail = (
         f"Eiendommen ligger i flomsone ({', '.join(parts)})"
         if parts
@@ -46,23 +73,7 @@ def parse_flood_zone(raw: str | None) -> FloodZoneResult | None:
 
 
 def parse_landslide_zone(raw: str | None) -> FloodZoneResult | None:
-    if not raw or not raw.strip():
-        return None
-    features = _parse_nve_geojson(raw)
-    if not features:
-        return None
-    first = features[0]
-    parts: list[str] = []
-    if skredtype := first.get("skredtype"):
-        parts.append(skredtype)
-    if faresone := first.get("faresone"):
-        parts.append(faresone)
-    detail = (
-        f"Eiendommen ligger i skredfaresone ({', '.join(parts)})"
-        if parts
-        else "Eiendommen ligger i skredfaresone"
-    )
-    return FloodZoneResult(inZone=True, detail=detail)
+    return _parse_nve_zone(raw, "skredfaresone", ["skredtype", "faresone"])
 
 
 def parse_kvikkleire(raw: str | None) -> KvikkleireResult | None:

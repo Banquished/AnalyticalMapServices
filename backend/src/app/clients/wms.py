@@ -8,7 +8,9 @@ from dataclasses import dataclass
 
 from app.clients.http import fetch_text
 
-DELTA = 0.001  # ~111m at equator
+DELTA = 0.001  # ~111m grid spacing at equator (less precise at high latitudes)
+WMS_PIXEL_SIZE = 256
+WMS_CENTER = WMS_PIXEL_SIZE // 2
 
 
 @dataclass(frozen=True)
@@ -144,6 +146,15 @@ FEATURE_INFO_ENDPOINTS: list[WmsEndpoint] = [
         category="generelt",
         result_key="kommunedelplan",
     ),
+    WmsEndpoint(
+        name="Planlegging igangsatt",
+        url="https://plandata.ft.dibk.no/services/wms/planleggingigangsatt/",
+        layers="planomrade_v",
+        version="1.3.0",
+        info_format="text/plain",
+        category="generelt",
+        result_key="planleggingIgangsatt",
+    ),
 ]
 
 
@@ -163,7 +174,6 @@ async def get_feature_info(endpoint: WmsEndpoint, lat: float, lng: float) -> str
     Send a WMS GetFeatureInfo request and return the raw response text.
     Returns None on failure (logged internally by fetch_text).
     """
-    width = height = 256
     bbox, crs = _compute_bbox(lat, lng, endpoint.version)
     crs_param = "CRS" if endpoint.version == "1.3.0" else "SRS"
 
@@ -175,17 +185,17 @@ async def get_feature_info(endpoint: WmsEndpoint, lat: float, lng: float) -> str
         "QUERY_LAYERS": endpoint.layers,
         crs_param: crs,
         "BBOX": bbox,
-        "WIDTH": str(width),
-        "HEIGHT": str(height),
+        "WIDTH": str(WMS_PIXEL_SIZE),
+        "HEIGHT": str(WMS_PIXEL_SIZE),
         "INFO_FORMAT": endpoint.info_format,
         "FORMAT": "image/png",
     }
 
     if endpoint.version == "1.3.0":
-        params["I"] = str(width // 2)
-        params["J"] = str(height // 2)
+        params["I"] = str(WMS_CENTER)
+        params["J"] = str(WMS_CENTER)
     else:
-        params["X"] = str(width // 2)
-        params["Y"] = str(height // 2)
+        params["X"] = str(WMS_CENTER)
+        params["Y"] = str(WMS_CENTER)
 
     return await fetch_text(endpoint.url, params)

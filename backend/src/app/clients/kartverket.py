@@ -4,24 +4,10 @@ Kartverket Eiendom API client.
 Base URL: https://api.kartverket.no/eiendom/v1
 """
 
-from typing import Any
-
+from app.clients._utils import build_url
 from app.clients.http import fetch_json_strict
 
 _BASE_URL = "https://api.kartverket.no/eiendom/v1"
-
-
-def _build_url(path: str, params: dict[str, Any]) -> tuple[str, dict[str, str]]:
-    """Return (url, cleaned_params) with None values removed."""
-    def _fmt(v: Any) -> str:
-        if isinstance(v, bool):
-            return str(v).lower()           # True → "true"
-        if isinstance(v, float) and v.is_integer():
-            return str(int(v))              # 200.0 → "200"
-        return str(v)
-
-    cleaned = {k: _fmt(v) for k, v in params.items() if v is not None and v != ""}
-    return f"{_BASE_URL}{path}", cleaned
 
 
 async def get_geokoding(
@@ -35,7 +21,7 @@ async def get_geokoding(
     omrade: bool | None = None,
     utkoordsys: int | None = None,
 ) -> dict:
-    url, params = _build_url("/geokoding", {
+    url, params = build_url(_BASE_URL,"/geokoding", {
         "matrikkelnummer": matrikkelnummer,
         "kommunenummer": kommunenummer,
         "gardsnummer": gardsnummer,
@@ -58,7 +44,7 @@ async def get_properties_by_point(
     side: int | None = None,
     utkoordsys: int | None = None,
 ) -> dict:
-    url, params = _build_url("/punkt", {
+    url, params = build_url(_BASE_URL,"/punkt", {
         "ost": ost,
         "nord": nord,
         "koordsys": koordsys,
@@ -79,7 +65,7 @@ async def get_property_areas_by_point(
     maks_treff: int | None = None,
     utkoordsys: int | None = None,
 ) -> dict:
-    url, params = _build_url("/punkt/omrader", {
+    url, params = build_url(_BASE_URL,"/punkt/omrader", {
         "ost": ost,
         "nord": nord,
         "koordsys": koordsys,
