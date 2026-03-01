@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Query
+import httpx
+from fastapi import APIRouter, HTTPException, Query
 
+from app.clients.http import ApiError
 from app.services.address import addresses_reverse, addresses_search
 
 router = APIRouter(tags=["addresses"])
@@ -22,21 +24,24 @@ async def search_addresses_endpoint(
     side: int | None = Query(None),
 ) -> dict:
     """Free-text address search via Geonorge /sok."""
-    return await addresses_search(
-        sok=sok,
-        fuzzy=fuzzy,
-        sokemodus=sokemodus,
-        adressenavn=adressenavn,
-        kommunenummer=kommunenummer,
-        kommunenavn=kommunenavn,
-        gardsnummer=gardsnummer,
-        bruksnummer=bruksnummer,
-        postnummer=postnummer,
-        poststed=poststed,
-        utkoordsys=utkoordsys,
-        treff_per_side=treff_per_side,
-        side=side,
-    )
+    try:
+        return await addresses_search(
+            sok=sok,
+            fuzzy=fuzzy,
+            sokemodus=sokemodus,
+            adressenavn=adressenavn,
+            kommunenummer=kommunenummer,
+            kommunenavn=kommunenavn,
+            gardsnummer=gardsnummer,
+            bruksnummer=bruksnummer,
+            postnummer=postnummer,
+            poststed=poststed,
+            utkoordsys=utkoordsys,
+            treff_per_side=treff_per_side,
+            side=side,
+        )
+    except (ApiError, httpx.TimeoutException) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.get("/addresses/reverse")
@@ -60,15 +65,5 @@ async def reverse_geocode(
             treff_per_side=treff_per_side,
             side=side,
         )
-    except Exception:
-        return {
-            "adresser": [],
-            "metadata": {
-                "totaltAntallTreff": 0,
-                "viserFra": 0,
-                "viserTil": 0,
-                "sokeStreng": "",
-                "side": 0,
-                "treffPerSide": treff_per_side or 1,
-            },
-        }
+    except (ApiError, httpx.TimeoutException) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
