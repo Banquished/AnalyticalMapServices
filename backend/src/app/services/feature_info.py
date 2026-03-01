@@ -7,6 +7,8 @@ Port of fetchAllFeatureInfo() in useFeatureInfo.ts.
 import asyncio
 import logging
 import time
+from collections.abc import Callable
+from typing import cast
 
 from app.cache import coord_cache_key, get_cache
 from app.clients import (
@@ -26,6 +28,7 @@ from app.domain.parsers.generelt import (
     parse_kommunedelplan,
     parse_kommuneplan,
     parse_matrikkel_info,
+    parse_planlegging_igangsatt,
 )
 from app.domain.parsers.klima import parse_flood_zone, parse_kvikkleire, parse_landslide_zone
 from app.domain.parsers.risiko import (
@@ -47,11 +50,11 @@ from app.domain.types import (
 logger = logging.getLogger(__name__)
 
 
-def _safe[T](fn) -> T | None:
+def _safe[T](fn: Callable[[], T]) -> T | None:
     try:
         return fn()
     except Exception as exc:
-        logger.warning("Parser error: %s", exc)
+        logger.warning("Parser %s failed: %s", fn.__name__, exc, exc_info=True)
         return None
 
 
@@ -88,7 +91,8 @@ async def fetch_feature_info(lat: float, lng: float) -> FeatureInfoData:
             logger.warning("WMS %s failed: %s", ep.name, result)
             raw_results[ep.result_key] = None
         else:
-            raw_results[ep.result_key] = result
+            # result is guaranteed str | None — return type of get_feature_info
+            raw_results[ep.result_key] = cast(str | None, result)
 
     # REST results (indices n_wms..n_wms+3)
     def _rest(idx: int) -> list[dict]:
@@ -96,7 +100,8 @@ async def fetch_feature_info(lat: float, lng: float) -> FeatureInfoData:
         if isinstance(result, BaseException):
             logger.warning("REST query %d failed: %s", idx, result)
             return []
-        return result  # type: ignore[return-value]
+        # result is guaranteed list[dict] — return type of the REST client functions
+        return cast(list[dict], result)
 
     kulturminner_attrs = _rest(0)
     stoy_veg_attrs = _rest(1)
@@ -139,12 +144,17 @@ async def fetch_feature_info(lat: float, lng: float) -> FeatureInfoData:
     matrikkel_raw = raw_results.get("matrikkel")
     kommuneplan_raw = raw_results.get("kommuneplan")
     kommunedelplan_raw = raw_results.get("kommunedelplan")
+    planlegging_igangsatt_raw = raw_results.get("planleggingIgangsatt")
 
     kommuneplan = _safe(lambda: parse_kommuneplan(kommuneplan_raw))
     kommunedelplan = _safe(lambda: parse_kommunedelplan(kommunedelplan_raw))
+    planlegging_igangsatt = _safe(lambda: parse_planlegging_igangsatt(planlegging_igangsatt_raw))
     base = _safe(lambda: parse_matrikkel_info(matrikkel_raw))
 
-    if base is None and kommuneplan is None and kommunedelplan is None:
+    all_none = all(
+        x is None for x in (base, kommuneplan, kommunedelplan, planlegging_igangsatt)
+    )
+    if all_none:
         generelt = None
     else:
         generelt = GenereltData(
@@ -153,6 +163,7 @@ async def fetch_feature_info(lat: float, lng: float) -> FeatureInfoData:
             serviceError=base.serviceError if base else None,
             kommuneplan=kommuneplan,
             kommunedelplan=kommunedelplan,
+            planleggingIgangsatt=planlegging_igangsatt,
         )
 
     data = FeatureInfoData(
