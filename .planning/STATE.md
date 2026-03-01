@@ -38,6 +38,9 @@ Progress: [███░░░░░░░] 30%
 - Quality pass phases 1–7 already completed before this milestone (backend DRY helpers, hook extraction, error boundary wiring)
 - Files already created: `domain/parsers/_common.py`, `_generelt_config.py`, `clients/_utils.py`, `hooks/useTabStatuses.ts`, `hooks/usePropertySelectionToasts.ts`, `shared/ui/AppErrorBoundary.tsx`
 - All checks currently pass: `tsc --noEmit` clean, `npm run build` clean, `ruff check` clean
+- [01-01] @overload + Literal[True/False] discrimination for _fetch_with_retry — preserves all call sites without changes
+- [01-01] cast() at asyncio.gather() result boundaries — isinstance(BaseException) guard + cast() to expected type
+- [01-01] strict=true in [tool.mypy] with ignore_missing_imports=true for reproducible mypy CI
 - [01-02] ArcGIS clients raise ApiError on API errors — data is None (network) still returns [], "error" in data raises typed exception
 - [01-02] Removed unused logging imports from ArcGIS clients after removing logger.warning calls
 - [01-03] Re-raise HTTPException before ApiError/TimeoutException catch to preserve 422 vs 502 semantics
@@ -54,5 +57,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 01-03-PLAN.md (router error wrappers + coordinate guard) — Phase 1 complete
+Stopped at: Completed 01-01-PLAN.md (type suppressions removed, mypy strict config added) — Plan 1/3 of Phase 1
 Resume file: None
