@@ -59,7 +59,7 @@ async def _fetch_with_retry(
     max_retries: int,
     *,
     parse_json: Literal[True],
-) -> dict | None: ...
+) -> dict[str, Any] | None: ...
 
 
 @overload
@@ -78,7 +78,7 @@ async def _fetch_with_retry(
     max_retries: int,
     *,
     parse_json: bool,
-) -> str | dict | None:
+) -> str | dict[str, Any] | None:
     """Shared retry loop for text and JSON fetches."""
     client = get_client()
     last_exc: Exception | None = None
@@ -119,13 +119,13 @@ async def fetch_json(
     params: dict[str, Any] | None = None,
     *,
     retries: int | None = None,
-) -> dict | None:
+) -> dict[str, Any] | None:
     """GET request returning parsed JSON; returns None on error (logs warning)."""
     max_retries = retries if retries is not None else settings.request_retries
     return await _fetch_with_retry(url, params, max_retries, parse_json=True)
 
 
-async def fetch_json_strict(url: str, params: dict[str, Any] | None = None) -> dict:
+async def fetch_json_strict(url: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
     """Like fetch_json but raises ApiError on failure (for callers that need to propagate)."""
     result = await fetch_json(url, params)
     if result is None:

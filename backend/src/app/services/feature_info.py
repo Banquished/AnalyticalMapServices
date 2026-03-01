@@ -8,7 +8,7 @@ import asyncio
 import logging
 import time
 from collections.abc import Callable
-from typing import cast
+from typing import Any, cast
 
 from app.cache import coord_cache_key, get_cache
 from app.clients import (
@@ -67,7 +67,7 @@ async def fetch_feature_info(lat: float, lng: float) -> FeatureInfoData:
     cache_key = coord_cache_key(lat, lng)
     if cache_key in cache:
         logger.debug("Cache hit for %s", cache_key)
-        return cache[cache_key]
+        return cast(FeatureInfoData, cache[cache_key])
 
     # -----------------------------------------------------------------------
     # Fire all upstream calls in parallel
@@ -95,13 +95,13 @@ async def fetch_feature_info(lat: float, lng: float) -> FeatureInfoData:
             raw_results[ep.result_key] = cast(str | None, result)
 
     # REST results (indices n_wms..n_wms+3)
-    def _rest(idx: int) -> list[dict]:
+    def _rest(idx: int) -> list[dict[str, Any]]:
         result = all_results[n_wms + idx]
         if isinstance(result, BaseException):
             logger.warning("REST query %d failed: %s", idx, result)
             return []
         # result is guaranteed list[dict] — return type of the REST client functions
-        return cast(list[dict], result)
+        return cast(list[dict[str, Any]], result)
 
     kulturminner_attrs = _rest(0)
     stoy_veg_attrs = _rest(1)
