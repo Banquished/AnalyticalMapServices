@@ -2,6 +2,7 @@
 FastAPI application factory.
 """
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -12,6 +13,8 @@ from app.clients import http as http_client
 from app.clients.http import ApiError
 from app.config import settings
 from app.routers import addresses, feature_info, properties
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -30,16 +33,17 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["GET"],
-    allow_headers=["*"],
+    allow_headers=["Content-Type", "Accept"],
 )
 
 @app.exception_handler(ApiError)
 async def api_error_handler(request: Request, exc: ApiError) -> JSONResponse:
+    logger.error("Upstream error: %s", exc, exc_info=True)
     return JSONResponse(
         status_code=502,
-        content={"detail": str(exc), "kind": exc.kind},
+        content={"detail": "Upstream service unavailable", "kind": exc.kind},
     )
 
 

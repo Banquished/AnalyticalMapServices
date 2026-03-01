@@ -1,8 +1,12 @@
+import logging
+
 import httpx
 from fastapi import APIRouter, HTTPException, Query
 
 from app.clients.http import ApiError
 from app.services.address import addresses_reverse, addresses_search
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["addresses"])
 
@@ -41,7 +45,8 @@ async def search_addresses_endpoint(
             side=side,
         )
     except (ApiError, httpx.TimeoutException) as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        logger.error("Upstream error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=502, detail="Upstream service unavailable") from exc
 
 
 @router.get("/addresses/reverse")
@@ -66,4 +71,5 @@ async def reverse_geocode(
             side=side,
         )
     except (ApiError, httpx.TimeoutException) as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        logger.error("Upstream error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=502, detail="Upstream service unavailable") from exc
